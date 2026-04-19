@@ -1,0 +1,592 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>小白装机问卷 · 无 AI 测试页 V1</title>
+<style>
+  :root{
+    --bg:#f6f7f9; --card:#fff; --border:#e3e5ea; --ink:#1f2328; --sub:#5c6370;
+    --accent:#2f6feb; --accent-soft:#eaf1ff; --warn:#c96a1a; --ok:#1f7a3a;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font:14px/1.6 -apple-system,"Segoe UI",Roboto,"PingFang SC","Microsoft YaHei",sans-serif;color:var(--ink);background:var(--bg)}
+  header{padding:18px 24px;background:var(--card);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:10}
+  header h1{margin:0;font-size:18px}
+  header p{margin:4px 0 0;color:var(--sub);font-size:12px}
+  main{max-width:880px;margin:0 auto;padding:20px 16px 80px}
+  .card{background:var(--card);border:1px solid var(--border);border-radius:10px;padding:16px 18px;margin-bottom:14px}
+  .q-title{font-weight:600;margin:0 0 10px;display:flex;gap:8px;align-items:baseline}
+  .q-title .idx{color:var(--accent);font-variant-numeric:tabular-nums}
+  .opts{display:grid;grid-template-columns:1fr;gap:6px}
+  @media(min-width:640px){.opts{grid-template-columns:1fr 1fr}}
+  .opt{border:1px solid var(--border);border-radius:8px;padding:10px 12px;cursor:pointer;display:flex;gap:10px;align-items:center;background:#fff;transition:all .12s}
+  .opt:hover{border-color:#b9c2d0}
+  .opt input{margin:0}
+  .opt.checked{border-color:var(--accent);background:var(--accent-soft)}
+  .actions{display:flex;gap:10px;margin-top:8px;align-items:center;flex-wrap:wrap}
+  button{font:inherit;padding:8px 18px;border-radius:8px;border:1px solid var(--border);background:#fff;cursor:pointer}
+  button.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+  button.primary:hover{filter:brightness(1.05)}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  .hint{color:var(--sub);font-size:12px}
+  #result{display:none}
+  #result.show{display:block}
+  .tag{display:inline-block;padding:2px 8px;border-radius:999px;background:var(--accent-soft);color:var(--accent);font-size:12px;margin-right:6px}
+  .tag.warn{background:#fdf0e0;color:var(--warn)}
+  .tag.ok{background:#e3f4e8;color:var(--ok)}
+  table{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+  th,td{border:1px solid var(--border);padding:6px 10px;text-align:left;vertical-align:top}
+  th{background:#f1f3f7;font-weight:600}
+  .grid3{display:grid;grid-template-columns:1fr;gap:10px}
+  @media(min-width:780px){.grid3{grid-template-columns:1fr 1fr 1fr}}
+  .tier{border:1px solid var(--border);border-radius:10px;padding:12px 14px;background:#fff}
+  .tier h4{margin:0 0 6px;font-size:14px}
+  .tier .price{color:var(--accent);font-weight:600}
+  details{margin-top:10px}
+  details>summary{cursor:pointer;color:var(--sub);font-size:13px;padding:4px 0}
+  pre{background:#0f1115;color:#d8dde3;padding:12px;border-radius:8px;overflow:auto;font-size:12px;line-height:1.5}
+  .row{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+  .kv{font-size:13px;color:var(--sub)}
+  .kv b{color:var(--ink)}
+  .err{color:#b3261e;font-size:12px;margin-top:6px}
+  .side-picker{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+  @media(max-width:640px){.side-picker{grid-template-columns:1fr}}
+  .side-col{border:1px solid var(--border);border-radius:8px;padding:10px;background:#fafbfd;min-height:140px}
+  .side-col>label{font-size:12px;color:var(--sub);display:block;margin-bottom:6px;font-weight:600}
+  .side-col ul,.side-col ol{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:6px}
+  .side-item{border:1px solid var(--border);border-radius:6px;padding:6px 8px;background:#fff;display:flex;align-items:center;gap:6px;font-size:13px}
+  .side-item.pool{cursor:pointer}
+  .side-item.pool:hover{border-color:var(--accent);background:var(--accent-soft)}
+  .side-item .rank{display:inline-block;width:22px;height:22px;line-height:22px;text-align:center;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:600;font-size:12px;flex-shrink:0}
+  .side-item .txt{flex:1}
+  .side-item button{padding:2px 8px;font-size:12px;border-radius:4px}
+  .side-item.empty{color:var(--sub);font-style:italic;border-style:dashed;justify-content:center}
+  .side-group{margin:10px 0 4px}
+  .side-group+.side-group{padding-top:10px;border-top:1px dashed var(--border)}
+  .side-group-title{font-weight:600;font-size:13px;margin-bottom:6px;color:var(--ink)}
+  .side-group-title .hint{font-weight:400}
+</style>
+</head>
+<body>
+<header>
+  <h1>小白装机问卷 · 无 AI 测试页 V1</h1>
+  <p>根据《小白装机问卷设计稿》第十一 ~ 十四节的评分规则本地计算，全程不调用任何模型。用来验证问题设计能否稳定收敛到正确的配置方向与预算档。</p>
+</header>
+<main>
+  <form id="quiz"></form>
+  <div class="card actions">
+    <button type="button" id="btn-submit" class="primary">计算推荐配置</button>
+    <button type="button" id="btn-reset">清空</button>
+    <button type="button" id="btn-sample">填一组样例</button>
+    <span class="hint">Q1 多选+排优先级（至少 1 项），其余题单选。Q1~Q5 决定配置方向，Q6~Q9 决定预算与外设。</span>
+  </div>
+  <section id="result" class="card"></section>
+</main>
+<script>
+/* ===== 问卷与评分规则（与设计稿 十一、十二、十三、十四 对齐） ===== */
+const QUESTIONS = [
+  { id:"q2", title:"下面哪种情况最接近你的实际使用？", opts:[
+    { id:"q2a", text:"同时开很多网页、文档、聊天软件", s:{cpu:2,office:1} },
+    { id:"q2b", text:"会跑开发环境、数据库、虚拟机、Docker", s:{cpu:3} },
+    { id:"q2c", text:"会修图、排版、做海报",       s:{balance:2,gpu:1} },
+    { id:"q2d", text:"会剪 1080P / 4K 视频",       s:{gpu:2,cpu:1} },
+    { id:"q2e", text:"会玩大型 3A 游戏",           s:{gpu:3} },
+    { id:"q2f", text:"会跑 3D / CAD / 建模渲染",   s:{gpu:3,cpu:1} },
+    { id:"q2g", text:"只是轻度使用，不卡就行",     s:{office:3} },
+  ]},
+  { id:"q3", title:"你更在意哪一项？", opts:[
+    { id:"q3a", text:"反应快、开软件快",           s:{cpu:2} },
+    { id:"q3b", text:"多开不卡、运行稳定",         s:{cpu:2,balance:1} },
+    { id:"q3c", text:"游戏帧数高",                 s:{gpu:3} },
+    { id:"q3d", text:"设计 / 渲染效率高",          s:{gpu:2,cpu:1} },
+    { id:"q3e", text:"安静省电",                   s:{office:2} },
+    { id:"q3f", text:"性价比最高",                 s:{balance:2} },
+  ]},
+  { id:"q4", title:"你会不会玩游戏？如果会，偏向哪类？", opts:[
+    { id:"q4a", text:"基本不玩",                   s:{office:1} },
+    { id:"q4b", text:"LOL / CF / DOTA2 这类网游",  s:{gpu:1,balance:1} },
+    { id:"q4c", text:"原神 / 永劫无间 / 吃鸡",     s:{gpu:2} },
+    { id:"q4d", text:"黑神话 / 赛博朋克 / 3A 大作", s:{gpu:3} },
+    { id:"q4e", text:"主要是主机模拟器 / 多开游戏", s:{cpu:2,gpu:1} },
+  ]},
+  { id:"q5", title:"你做设计或内容创作吗？", opts:[
+    { id:"q5a", text:"不做",                       s:{} },
+    { id:"q5b", text:"Photoshop / Illustrator / Figma 为主", s:{balance:2,gpu:1} },
+    { id:"q5c", text:"Premiere / 剪映 / 达芬奇",   s:{gpu:2,cpu:1} },
+    { id:"q5d", text:"CAD / SketchUp / SolidWorks", s:{gpu:2,cpu:1} },
+    { id:"q5e", text:"Blender / C4D / 3ds Max",    s:{gpu:3} },
+  ]},
+  { id:"q6", title:"你对电脑寿命和升级有什么期待？", opts:[
+    { id:"q6a", text:"能用就行，2~3 年够了",       s:{upgrade:0} },
+    { id:"q6b", text:"希望 3~5 年都够用",          s:{upgrade:1} },
+    { id:"q6c", text:"希望留升级空间",             s:{upgrade:2} },
+    { id:"q6d", text:"一步到位，尽量别后悔",       s:{upgrade:3} },
+  ]},
+  { id:"q7", title:"你更偏向哪种预算心态？", opts:[
+    { id:"q7a", text:"越便宜越好，够用就行",       s:{budget:0} },
+    { id:"q7b", text:"性价比优先",                 s:{budget:1} },
+    { id:"q7c", text:"贵一点没关系，但要明显更舒服", s:{budget:2} },
+    { id:"q7d", text:"预算不是第一位，体验优先",   s:{budget:3} },
+  ]},
+  { id:"q8", title:"你的整机预算更接近哪一档？", opts:[
+    { id:"q8a", text:"2500 以内",        s:{budgetFloor:0} },
+    { id:"q8b", text:"2500~4000",        s:{budgetFloor:1} },
+    { id:"q8c", text:"4000~6000",        s:{budgetFloor:2} },
+    { id:"q8d", text:"6000~9000",        s:{budgetFloor:3} },
+    { id:"q8e", text:"9000~12000",       s:{budgetFloor:4} },
+    { id:"q8f", text:"12000 以上",       s:{budgetFloor:5} },
+    { id:"q8g", text:"还没想好，先看推荐", s:{} },
+  ]},
+  { id:"q9", title:"是否需要包含这些外设？", opts:[
+    { id:"q9a", text:"只要主机",               s:{peripheral:0} },
+    { id:"q9b", text:"主机 + 显示器",           s:{peripheral:1000} },
+    { id:"q9c", text:"主机 + 显示器 + 键鼠",    s:{peripheral:1200} },
+    { id:"q9d", text:"全套都要",               s:{peripheral:1500} },
+  ]},
+];
+
+/* 第 1 题：需求优先级池，拆成 3 个子类（办公/学习、开发/创作、游戏/娱乐），每类内部独立排序 */
+const Q1_GROUPS = [
+  { id:"g_work", title:"办公 / 学习", hint:"日常使用方向，选你会做的，#1 放最常做的", opts:[
+    { id:"qs_office", text:"日常办公",              s:{office:3, cpu:1} },
+    { id:"qs_study",  text:"上网课 / 学习",          s:{office:2, balance:1} },
+    { id:"qs_multi",  text:"多开网页 / 文档 / 聊天",  s:{cpu:2, office:1} },
+    { id:"qs_stream", text:"开会 / 直播 / 录屏",      s:{cpu:1, balance:1} },
+    { id:"qs_media",  text:"家用影音 / 追剧 / NAS",   s:{office:1} },
+  ]},
+  { id:"g_dev", title:"开发 / 创作", hint:"生产力方向，选你用得到的软件类型", opts:[
+    { id:"qs_dev",     text:"写代码 / 开发",              s:{cpu:3} },
+    { id:"qs_vm",      text:"虚拟机 / Docker / 数据库",    s:{cpu:3} },
+    { id:"qs_ps",      text:"PS / AI / Figma 平面设计",    s:{balance:2, gpu:1} },
+    { id:"qs_pr",      text:"剪映 / PR / 达芬奇 剪 1080P", s:{gpu:2, cpu:1} },
+    { id:"qs_pr4k",    text:"剪 4K / 高码率视频",          s:{gpu:3, cpu:2} },
+    { id:"qs_cad",     text:"CAD / SketchUp / SolidWorks", s:{gpu:2, cpu:1} },
+    { id:"qs_blender", text:"Blender / C4D / 3ds Max",    s:{gpu:3} },
+  ]},
+  { id:"g_game", title:"游戏 / 多开", hint:"娱乐/重载方向，完全不玩可跳过", opts:[
+    { id:"qs_3a",       text:"3A / 黑神话 / 赛博朋克",   s:{gpu:3} },
+    { id:"qs_game_mid", text:"原神 / 永劫 / 吃鸡",       s:{gpu:2} },
+    { id:"qs_game_lan", text:"LOL / CF / DOTA 网游",    s:{gpu:1, balance:1} },
+    { id:"qs_emu",      text:"模拟器多开 / 云手机",        s:{cpu:2, gpu:1} },
+  ]},
+];
+/* 每个子类内部的位次权重（子类较小，权重曲线陡些） */
+const SIDE_WEIGHTS = [1.0, 0.6, 0.3, 0.15];
+let sideState = { g_work:[], g_dev:[], g_game:[] };
+/* 便捷查找 */
+function q1OptById(id){
+  for (const g of Q1_GROUPS){ const o = g.opts.find(x=>x.id===id); if (o) return { group:g, opt:o }; }
+  return null;
+}
+
+/* 主机预算区间（以档位中点作为规划预算） */
+const BUDGET_BUCKETS = [
+  { level:0, label:"2500 以下",    lo:0,     hi:2499,  plan:2200 },
+  { level:1, label:"2500~4000",    lo:2500,  hi:3999,  plan:3500 },
+  { level:2, label:"4000~6000",    lo:4000,  hi:5999,  plan:5000 },
+  { level:3, label:"6000~9000",    lo:6000,  hi:8999,  plan:7500 },
+  { level:4, label:"9000~12000",   lo:9000,  hi:11999, plan:10500 },
+  { level:5, label:"12000 以上",   lo:12000, hi:99999, plan:14000 },
+];
+
+/* 三档主机配置模板（方向 × 档位 → 粗粒度硬件，价格区间为 2026-04 行情估算，落地前需按爬虫数据校准） */
+const CONFIG_TEMPLATES = {
+  "低功耗办公型": [
+    /*level 0*/ { cpu:"Intel i3-12100 盒装", gpu:"核显 UHD 730", mem:"8GB DDR4 3200", ssd:"256GB NVMe", psu:"额定 300W", mb:"H610M", range:[2000,2600] },
+    /*1*/ { cpu:"Intel i3-13100 盒装", gpu:"核显 UHD 730", mem:"16GB DDR4 3200", ssd:"512GB NVMe", psu:"额定 400W 铜牌", mb:"H610M", range:[2800,3800] },
+    /*2*/ { cpu:"Intel i5-12400 盒装", gpu:"核显 UHD 730", mem:"16GB DDR4 3200", ssd:"512GB NVMe", psu:"额定 450W 铜牌", mb:"B760M", range:[4000,5200] },
+    /*3*/ { cpu:"Intel i5-13500 盒装", gpu:"核显 UHD 770", mem:"32GB DDR4 3200", ssd:"1TB NVMe", psu:"额定 500W 金牌", mb:"B760M", range:[5200,6800] },
+    /*4*/ { cpu:"AMD R7-8700G (APU)", gpu:"核显 780M (轻游戏)", mem:"32GB DDR5 6000", ssd:"1TB NVMe Gen4", psu:"额定 550W 金牌", mb:"B650M", range:[7500,9200] },
+    /*5*/ { cpu:"AMD R7-8700G (APU)", gpu:"核显 780M (轻游戏)", mem:"64GB DDR5 6000", ssd:"2TB NVMe Gen4", psu:"额定 650W 金牌", mb:"B650M-ITX", range:[9500,11500] },
+  ],
+  "CPU优先": [
+    { cpu:"Intel i3-13100F", gpu:"GTX 1630 亮机", mem:"16GB DDR4 3200", ssd:"512GB NVMe", psu:"额定 450W 铜牌", mb:"H610M", range:[2600,3400] },
+    { cpu:"Intel i5-12400F", gpu:"RX 6400 / 亮机", mem:"16GB DDR4 3200", ssd:"512GB NVMe", psu:"额定 500W 铜牌", mb:"B760M", range:[3400,4200] },
+    { cpu:"Intel i5-13490F", gpu:"RTX 3050 6G", mem:"32GB DDR4 3200", ssd:"1TB NVMe", psu:"额定 550W 金牌", mb:"B760M", range:[4800,6200] },
+    { cpu:"Intel i7-14700KF", gpu:"RTX 4060 8G", mem:"32GB DDR5 6000", ssd:"1TB NVMe Gen4", psu:"额定 650W 金牌", mb:"B760M WiFi", range:[6800,8800] },
+    { cpu:"Intel i7-14700KF", gpu:"RTX 4060 Ti 16G", mem:"64GB DDR5 6000", ssd:"2TB NVMe Gen4", psu:"额定 750W 金牌", mb:"Z790", range:[9500,11800] },
+    { cpu:"AMD R9-7950X", gpu:"RTX 4070 Super", mem:"64GB DDR5 6000 C30", ssd:"2TB NVMe Gen4", psu:"额定 850W 金牌", mb:"X670E", range:[13000,17000] },
+  ],
+  "GPU优先": [
+    { cpu:"Intel i3-12100F", gpu:"RX 6600 8G", mem:"16GB DDR4 3200", ssd:"500GB NVMe", psu:"额定 500W 铜牌", mb:"H610M", range:[3000,3800] },
+    { cpu:"Intel i5-12400F", gpu:"RTX 3050 8G", mem:"16GB DDR4 3200", ssd:"500GB NVMe", psu:"额定 550W 铜牌", mb:"B760M", range:[3800,4800] },
+    { cpu:"Intel i5-12400F", gpu:"RTX 4060 8G", mem:"16GB DDR5 5600", ssd:"1TB NVMe", psu:"额定 650W 金牌", mb:"B760M", range:[5200,6500] },
+    { cpu:"Intel i5-14600KF", gpu:"RTX 4060 Ti 16G", mem:"32GB DDR5 6000", ssd:"1TB NVMe Gen4", psu:"额定 750W 金牌", mb:"B760M WiFi", range:[7000,9000] },
+    { cpu:"Intel i7-14700KF", gpu:"RTX 4070 Super 12G", mem:"32GB DDR5 6000", ssd:"2TB NVMe Gen4", psu:"额定 850W 金牌", mb:"Z790 WiFi", range:[9800,12000] },
+    { cpu:"Intel i7-14700KF", gpu:"RTX 4080 Super 16G", mem:"64GB DDR5 6400", ssd:"2TB NVMe Gen4", psu:"额定 1000W 金牌", mb:"Z790 WiFi", range:[14000,19000] },
+  ],
+  "均衡型": [
+    { cpu:"Intel i3-13100F", gpu:"RX 6600 8G", mem:"16GB DDR4 3200", ssd:"500GB NVMe", psu:"额定 500W 铜牌", mb:"H610M", range:[2800,3600] },
+    { cpu:"Intel i5-12400F", gpu:"RTX 3050 8G", mem:"16GB DDR4 3200", ssd:"500GB NVMe", psu:"额定 550W 铜牌", mb:"B760M", range:[3600,4600] },
+    { cpu:"Intel i5-13490F", gpu:"RTX 4060 8G", mem:"32GB DDR4 3200", ssd:"1TB NVMe", psu:"额定 650W 金牌", mb:"B760M", range:[5000,6500] },
+    { cpu:"Intel i5-14600KF", gpu:"RTX 4060 Ti 8G", mem:"32GB DDR5 6000", ssd:"1TB NVMe Gen4", psu:"额定 750W 金牌", mb:"B760M WiFi", range:[6800,8500] },
+    { cpu:"AMD R7-7800X3D", gpu:"RTX 4070 12G", mem:"32GB DDR5 6000", ssd:"1TB NVMe Gen4", psu:"额定 750W 金牌", mb:"B650 WiFi", range:[9000,11500] },
+    { cpu:"AMD R7-7800X3D", gpu:"RTX 4070 Ti Super", mem:"64GB DDR5 6000", ssd:"2TB NVMe Gen4", psu:"额定 850W 金牌", mb:"X670E WiFi", range:[13000,16000] },
+  ],
+};
+
+/* ===== 评分 + 判定 ===== */
+function score(answers){
+  const S = { cpu:0, gpu:0, balance:0, office:0, upgrade:0, budgetHint:null, budgetFloor:null, peripheral:0, side:[] };
+  for (const q of QUESTIONS){
+    const optId = answers[q.id];
+    if (!optId) continue;
+    const opt = q.opts.find(o=>o.id===optId);
+    if (!opt) continue;
+    const s = opt.s || {};
+    if (s.cpu)        S.cpu       += s.cpu;
+    if (s.gpu)        S.gpu       += s.gpu;
+    if (s.balance)    S.balance   += s.balance;
+    if (s.office)     S.office    += s.office;
+    if (s.upgrade!==undefined) S.upgrade = s.upgrade;
+    if (s.budget!==undefined)        S.budgetHint  = s.budget;
+    if (s.budgetFloor!==undefined)   S.budgetFloor = s.budgetFloor;
+    if (s.peripheral!==undefined)    S.peripheral  = s.peripheral;
+  }
+  for (const g of Q1_GROUPS){
+    const list = sideState[g.id] || [];
+    list.forEach((id, i) => {
+      const opt = g.opts.find(o => o.id === id);
+      if (!opt) return;
+      const w = SIDE_WEIGHTS[i] ?? SIDE_WEIGHTS[SIDE_WEIGHTS.length - 1];
+      const s = opt.s || {};
+      if (s.cpu)     S.cpu     += s.cpu * w;
+      if (s.gpu)     S.gpu     += s.gpu * w;
+      if (s.balance) S.balance += s.balance * w;
+      if (s.office)  S.office  += s.office * w;
+      S.side.push({ id, text: opt.text, group: g.title, rank: i + 1, weight: w });
+    });
+  }
+  for (const k of ["cpu","gpu","balance","office"]) S[k] = Math.round(S[k] * 10) / 10;
+  return S;
+}
+
+function decideDirection(S){
+  const reason = [];
+  /* 低功耗优先拦截：office 高且 gpu 不强 */
+  if (S.office >= 5 && S.gpu <= 2){
+    reason.push(`office_score=${S.office} ≥5 且 gpu_score=${S.gpu} ≤2 → 低功耗办公型`);
+    return { dir:"低功耗办公型", reason };
+  }
+  if (S.gpu - S.cpu >= 2){
+    reason.push(`gpu_score - cpu_score = ${S.gpu - S.cpu} ≥2 → GPU优先`);
+    return { dir:"GPU优先", reason };
+  }
+  if (S.cpu - S.gpu >= 2){
+    reason.push(`cpu_score - gpu_score = ${S.cpu - S.gpu} ≥2 → CPU优先`);
+    return { dir:"CPU优先", reason };
+  }
+  reason.push(`|cpu-gpu|=${Math.abs(S.cpu-S.gpu)} <2 或 balance 主导 → 均衡型`);
+  return { dir:"均衡型", reason };
+}
+
+function decideBudget(S){
+  /* 实际预算档位：第8题优先（budgetFloor），否则用第7题心理倾向（budgetHint） */
+  let level;
+  let source;
+  if (S.budgetFloor !== null){ level = S.budgetFloor; source = "第8题实际预算"; }
+  else if (S.budgetHint !== null){ level = S.budgetHint; source = "第7题心理倾向(第8题未选)"; }
+  else { level = 2; source = "默认（中低档）"; }
+
+  const total = BUDGET_BUCKETS[level];
+  /* 扣除外设后回落到相应主机档 */
+  const hostPlan = Math.max(total.plan - S.peripheral, BUDGET_BUCKETS[0].plan);
+  let hostLevel = BUDGET_BUCKETS.findIndex(b => hostPlan >= b.lo && hostPlan <= b.hi);
+  if (hostLevel < 0) hostLevel = 0;
+  return {
+    source, totalLevel: level, totalBucket: total,
+    peripheralCost: S.peripheral,
+    hostPlan, hostLevel, hostBucket: BUDGET_BUCKETS[hostLevel],
+  };
+}
+
+function decideConfig(direction, hostLevel, S){
+  const tpl = CONFIG_TEMPLATES[direction][hostLevel];
+  /* upgrade_score ≥2 时把内存/SSD 提一档（不能跨档，只做文案调整） */
+  const boosted = (S.upgrade >= 2);
+  const tierLow  = makeTier("低档 · 够用版", tpl, -1, boosted);
+  const tierMid  = makeTier("中档 · 推荐版", tpl, 0, boosted);
+  const tierHigh = makeTier("高档 · 一步到位版", tpl, +1, boosted);
+  return [tierLow, tierMid, tierHigh];
+}
+
+function makeTier(name, baseTpl, offset, boosted){
+  const scale = offset === -1 ? 0.85 : (offset === 1 ? 1.22 : 1);
+  const lo = Math.round(baseTpl.range[0] * scale / 100) * 100;
+  const hi = Math.round(baseTpl.range[1] * scale / 100) * 100;
+  /* 低档尽量砍内存/SSD；高档补内存/SSD/电源冗余 */
+  const mem = offset === -1
+    ? downMem(baseTpl.mem)
+    : (offset === 1 || boosted ? upMem(baseTpl.mem) : baseTpl.mem);
+  const ssd = offset === -1
+    ? downSsd(baseTpl.ssd)
+    : (offset === 1 || boosted ? upSsd(baseTpl.ssd) : baseTpl.ssd);
+  const psu = offset === 1 ? upPsu(baseTpl.psu) : baseTpl.psu;
+  return {
+    name, priceRange:[lo,hi],
+    cpu: baseTpl.cpu, gpu: baseTpl.gpu, mem, ssd, psu, mb: baseTpl.mb,
+  };
+}
+
+/* 粗糙的内存/SSD/电源升降档（仅演示用，后续接入硬件库后替换） */
+function upMem(m)  { return m.replace(/8GB/,"16GB").replace(/16GB/,"32GB").replace(/32GB/,"64GB"); }
+function downMem(m){ return m.replace(/64GB/,"32GB").replace(/32GB/,"16GB").replace(/16GB/,"8GB"); }
+function upSsd(s)  { return s.replace(/256GB/,"512GB").replace(/500GB/,"1TB").replace(/512GB/,"1TB").replace(/1TB/,"2TB"); }
+function downSsd(s){ return s.replace(/2TB/,"1TB").replace(/1TB/,"512GB").replace(/512GB/,"256GB").replace(/500GB/,"256GB"); }
+function upPsu(p)  { return p.replace(/300W/,"450W").replace(/400W/,"550W").replace(/450W/,"550W").replace(/500W/,"650W").replace(/550W/,"750W").replace(/650W/,"850W").replace(/750W/,"850W").replace(/850W/,"1000W"); }
+
+function suggestUpgrade(direction, S){
+  const tips = [];
+  if (S.upgrade >= 2) tips.push("选择了重视寿命/升级：内存直接从 16GB 起步 32GB，SSD 从 512GB 升到 1TB，电源留一档冗余。");
+  if (direction === "GPU优先" && S.cpu <= 2) tips.push("显卡档位较高而 CPU 分偏低：注意别让 CPU 拖后腿（至少 i5-12400F / R5-7500F 起步）。");
+  if (direction === "CPU优先" && S.gpu <= 1) tips.push("CPU 向且基本不玩游戏：可只配亮机卡或核显，把预算留给 CPU/内存/SSD。");
+  if (direction === "均衡型") tips.push("均衡型优先建议主流平台（B760/B650）+ 16~32GB 内存 + RTX 4060 级显卡。");
+  if (direction === "低功耗办公型") tips.push("办公向可选 APU（如 R7-8700G / R5-8600G）免独显，或直接用 i3/i5 核显方案。");
+  if (S.peripheral > 0) tips.push(`你选择包含外设（约扣除 ¥${S.peripheral}）：主机预算已自动下调一档。`);
+  return tips;
+}
+
+/* ===== 渲染 ===== */
+const form = document.getElementById("quiz");
+const result = document.getElementById("result");
+const btnSubmit = document.getElementById("btn-submit");
+const btnReset  = document.getElementById("btn-reset");
+const btnSample = document.getElementById("btn-sample");
+
+function render(){
+  const sideHtml = sideCardHtml();
+  const qsHtml = QUESTIONS.map((q,i)=>`
+    <div class="card" data-q="${q.id}">
+      <p class="q-title"><span class="idx">Q${i+2}.</span>${q.title}</p>
+      <div class="opts">
+        ${q.opts.map(o=>`
+          <label class="opt">
+            <input type="radio" name="${q.id}" value="${o.id}">
+            <span>${o.text}</span>
+          </label>`).join("")}
+      </div>
+    </div>`).join("");
+  form.innerHTML = sideHtml + qsHtml;
+  form.addEventListener("change", e=>{
+    if (e.target.matches('input[type="radio"]')){
+      const card = e.target.closest(".card");
+      card.querySelectorAll(".opt").forEach(l=>l.classList.remove("checked"));
+      e.target.closest(".opt").classList.add("checked");
+    }
+  });
+  bindSide();
+  renderSide();
+}
+
+function sideCardHtml(){
+  const groups = Q1_GROUPS.map(g => `
+    <div class="side-group" data-group="${g.id}">
+      <div class="side-group-title">${g.title} <span class="hint">· ${g.hint}</span></div>
+      <div class="side-picker">
+        <div class="side-col"><label>可选 · 点击加入 →</label><ul class="side-pool" data-group="${g.id}"></ul></div>
+        <div class="side-col"><label>已选 · ↑↓ 排优先级</label><ol class="side-picked" data-group="${g.id}"></ol></div>
+      </div>
+    </div>`).join("");
+  return `
+    <div class="card" data-q="q_side">
+      <p class="q-title"><span class="idx">Q1.</span>你的电脑主要拿来做什么？分类别各自选 + 排序（三类里至少选 1 项）</p>
+      ${groups}
+      <p class="hint" style="margin-top:8px">每类内权重：#1 ×1.0 · #2 ×0.6 · #3 ×0.3 · #4+ ×0.15。三类之间互相独立累加——既能表达"我只办公"，也能表达"又开发又游戏又设计"。</p>
+    </div>`;
+}
+
+function renderSide(){
+  for (const g of Q1_GROUPS){
+    const pool   = document.querySelector(`.side-pool[data-group="${g.id}"]`);
+    const picked = document.querySelector(`.side-picked[data-group="${g.id}"]`);
+    if (!pool || !picked) continue;
+    const state = sideState[g.id] || [];
+    const remaining = g.opts.filter(o => !state.includes(o.id));
+    pool.innerHTML = remaining.length
+      ? remaining.map(o => `
+        <li class="side-item pool" data-id="${o.id}" data-group="${g.id}" title="点击加入">
+          <span class="txt">${o.text}</span>
+          <button type="button" data-act="add" data-id="${o.id}" data-group="${g.id}">加入 ▶</button>
+        </li>`).join("")
+      : `<li class="side-item empty">本类已全加入</li>`;
+    picked.innerHTML = state.length
+      ? state.map((id, i) => {
+          const opt = g.opts.find(o => o.id === id);
+          const w = SIDE_WEIGHTS[i] ?? SIDE_WEIGHTS[SIDE_WEIGHTS.length - 1];
+          return `
+            <li class="side-item">
+              <span class="rank">${i + 1}</span>
+              <span class="txt">${opt.text}<span class="hint" style="margin-left:6px">×${w}</span></span>
+              <button type="button" data-act="up"     data-id="${id}" data-group="${g.id}" ${i===0?"disabled":""}>↑</button>
+              <button type="button" data-act="down"   data-id="${id}" data-group="${g.id}" ${i===state.length-1?"disabled":""}>↓</button>
+              <button type="button" data-act="remove" data-id="${id}" data-group="${g.id}">×</button>
+            </li>`;
+        }).join("")
+      : `<li class="side-item empty">本类未选（可跳过）</li>`;
+  }
+}
+
+function bindSide(){
+  const card = document.querySelector('.card[data-q="q_side"]');
+  if (!card) return;
+  card.addEventListener("click", (e) => {
+    const btn = e.target.closest("[data-act]");
+    const poolLi = e.target.closest(".side-item.pool");
+    if (btn){
+      e.stopPropagation();
+      const { act, id, group } = btn.dataset;
+      const arr = sideState[group];
+      if (!arr) return;
+      if (act === "add"){
+        if (!arr.includes(id)) arr.push(id);
+      } else if (act === "remove"){
+        sideState[group] = arr.filter(x => x !== id);
+      } else if (act === "up"){
+        const i = arr.indexOf(id);
+        if (i > 0) [arr[i-1], arr[i]] = [arr[i], arr[i-1]];
+      } else if (act === "down"){
+        const i = arr.indexOf(id);
+        if (i >= 0 && i < arr.length - 1) [arr[i+1], arr[i]] = [arr[i], arr[i+1]];
+      }
+      renderSide();
+      return;
+    }
+    if (poolLi){
+      const { id, group } = poolLi.dataset;
+      const arr = sideState[group];
+      if (arr && !arr.includes(id)) arr.push(id);
+      renderSide();
+    }
+  });
+}
+
+function collect(){
+  const data = {};
+  for (const q of QUESTIONS){
+    const sel = form.querySelector(`input[name="${q.id}"]:checked`);
+    if (sel) data[q.id] = sel.value;
+  }
+  return data;
+}
+
+function compute(){
+  const answers = collect();
+  const missing = QUESTIONS.filter(q => !answers[q.id]).map(q => `Q${QUESTIONS.indexOf(q)+2}`);
+  const sideTotal = Q1_GROUPS.reduce((n,g) => n + (sideState[g.id]?.length || 0), 0);
+  if (sideTotal === 0) missing.unshift("Q1（三个子类里至少选 1 项）");
+  if (missing.length){
+    return { error:`还有 ${missing.length} 题未作答：${missing.join(" / ")}` };
+  }
+  const S = score(answers);
+  const dir = decideDirection(S);
+  const budget = decideBudget(S);
+  const tiers = decideConfig(dir.dir, budget.hostLevel, S);
+  const tips = suggestUpgrade(dir.dir, S);
+  return { answers, S, dir, budget, tiers, tips };
+}
+
+function renderResult(r){
+  if (r.error){
+    result.classList.add("show");
+    result.innerHTML = `<div class="err">${r.error}</div>`;
+    return;
+  }
+  const { S, dir, budget, tiers, tips } = r;
+  result.classList.add("show");
+  result.innerHTML = `
+    <div class="row">
+      <div>
+        <span class="tag ok">配置方向</span><b>${dir.dir}</b>
+      </div>
+      <div>
+        <span class="tag">预算档</span>
+        总预算 <b>${budget.totalBucket.label}</b>
+        ${budget.peripheralCost? `（含外设 ¥${budget.peripheralCost}）`:""}
+        → 主机预算 <b>${budget.hostBucket.label}</b>，规划价 ¥${budget.hostPlan}
+      </div>
+    </div>
+    <div class="kv" style="margin-top:6px">
+      判定依据：${dir.reason.join("；")}。预算来源：${budget.source}。
+    </div>
+    ${S.side && S.side.length ? `
+      <div class="kv" style="margin-top:6px">
+        Q1 优先级加权：${S.side.map(x=>`<span class="tag">[${x.group}] #${x.rank} ${x.text} ×${x.weight}</span>`).join(" ")}
+      </div>` : ""}
+
+    <h3 style="margin:14px 0 6px">三档配置推荐</h3>
+    <div class="grid3">
+      ${tiers.map(t=>`
+        <div class="tier">
+          <h4>${t.name} <span class="price">¥${t.priceRange[0]}~${t.priceRange[1]}</span></h4>
+          <table>
+            <tr><th style="width:60px">CPU</th><td>${t.cpu}</td></tr>
+            <tr><th>显卡</th><td>${t.gpu}</td></tr>
+            <tr><th>内存</th><td>${t.mem}</td></tr>
+            <tr><th>SSD</th><td>${t.ssd}</td></tr>
+            <tr><th>主板</th><td>${t.mb}</td></tr>
+            <tr><th>电源</th><td>${t.psu}</td></tr>
+          </table>
+        </div>`).join("")}
+    </div>
+
+    ${tips.length? `
+      <h3 style="margin:14px 0 6px">升级建议</h3>
+      <ul>${tips.map(t=>`<li>${t}</li>`).join("")}</ul>`:""}
+
+    <details>
+      <summary>查看得分明细 / 原始数据（用于验证问卷设计）</summary>
+      <pre>${JSON.stringify({
+        scores: S,
+        direction: dir,
+        budget: budget,
+        answers: r.answers,
+      }, null, 2)}</pre>
+    </details>`;
+  result.scrollIntoView({behavior:"smooth", block:"start"});
+}
+
+btnSubmit.addEventListener("click", ()=>renderResult(compute()));
+btnReset.addEventListener("click", ()=>{
+  form.querySelectorAll("input[type=radio]").forEach(r=>r.checked=false);
+  form.querySelectorAll(".opt.checked").forEach(l=>l.classList.remove("checked"));
+  for (const g of Q1_GROUPS) sideState[g.id] = [];
+  renderSide();
+  result.classList.remove("show");
+  result.innerHTML="";
+});
+
+/* 一键样例：便于一次次快速跑不同典型用户 */
+const SAMPLES = [
+  { name:"游戏玩家 · 6~9K",       picks:["q2e","q3c","q4d","q5a","q6b","q7b","q8d","q9a"],
+    side:{ g_work:["qs_multi"],             g_dev:[],                    g_game:["qs_3a","qs_game_mid"] } },
+  { name:"开发者 · 4~6K",         picks:["q2b","q3a","q4a","q5a","q6c","q7b","q8c","q9a"],
+    side:{ g_work:["qs_multi"],             g_dev:["qs_dev","qs_vm"],    g_game:[] } },
+  { name:"办公轻度 · 2.5~4K",     picks:["q2g","q3e","q4a","q5a","q6a","q7a","q8b","q9b"],
+    side:{ g_work:["qs_office","qs_study","qs_media"], g_dev:[],         g_game:[] } },
+  { name:"视频剪辑 · 9~12K",      picks:["q2d","q3d","q4b","q5c","q6d","q7c","q8e","q9c"],
+    side:{ g_work:[],                       g_dev:["qs_pr4k","qs_ps"],   g_game:["qs_3a"] } },
+  { name:"开发+游戏+设计 · 6~9K", picks:["q2b","q3b","q4c","q5b","q6c","q7c","q8d","q9a"],
+    side:{ g_work:["qs_multi"],             g_dev:["qs_dev","qs_ps","qs_vm"], g_game:["qs_3a"] } },
+];
+let sampleIdx = 0;
+btnSample.addEventListener("click", ()=>{
+  const s = SAMPLES[sampleIdx % SAMPLES.length];
+  sampleIdx++;
+  form.querySelectorAll("input[type=radio]").forEach(r=>r.checked=false);
+  form.querySelectorAll(".opt.checked").forEach(l=>l.classList.remove("checked"));
+  for (const optId of s.picks){
+    const r = form.querySelector(`input[value="${optId}"]`);
+    if (r){ r.checked = true; r.closest(".opt").classList.add("checked"); }
+  }
+  for (const g of Q1_GROUPS) sideState[g.id] = [...((s.side && s.side[g.id]) || [])];
+  renderSide();
+  btnSample.textContent = `填一组样例（下次：${SAMPLES[sampleIdx % SAMPLES.length].name}）`;
+  renderResult(compute());
+});
+
+render();
+btnSample.textContent = `填一组样例（下次：${SAMPLES[0].name}）`;
+</script>
+</body>
+</html>

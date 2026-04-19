@@ -1,0 +1,17 @@
+# 关键词列表示例（每行一个；# 开头为注释）
+# 用法：python run_cpu_crawl_pw.py --keywords-file keywords.txt --pages 2 --headed
+
+# Intel 12 代
+i5-12400F
+i5-12490F
+i5-12600KF
+
+# Intel 13 代
+i5-13400F
+i5-13490F
+i7-13700K
+
+# AMD 7000 系列
+R5 7500F
+R7 7700X
+R7 7800X3D

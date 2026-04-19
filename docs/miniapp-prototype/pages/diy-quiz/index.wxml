@@ -1,0 +1,107 @@
+<view class="page">
+  <view class="hdr">
+    <view class="title">小白装机问卷</view>
+    <view class="subtitle">Q1 多选 + 排优先级，其余单选；本地计算，无 AI</view>
+  </view>
+
+  <!-- Q1：三个子类池 -->
+  <view class="card">
+    <view class="q-title"><text class="idx">Q1.</text>你的电脑主要拿来做什么？按类别各自选 + 排优先级（三类至少选 1 项）</view>
+    <block wx:for="{{q1Groups}}" wx:key="id" wx:for-item="g">
+      <view class="side-group">
+        <view class="side-group-title">{{g.title}}<text class="hint"> · {{g.hint}}</text></view>
+
+        <view class="col-label">可选池 · 点击加入</view>
+        <view wx:if="{{g.pool.length === 0}}" class="side-item empty">本类已全部加入</view>
+        <block wx:for="{{g.pool}}" wx:key="id" wx:for-item="o">
+          <view class="side-item pool" bindtap="addSide" data-group="{{g.id}}" data-id="{{o.id}}">
+            <text class="txt">{{o.text}}</text>
+            <text class="btn-add">加入 ▶</text>
+          </view>
+        </block>
+
+        <view class="col-label mt">已选 · ↑↓ 调整优先级</view>
+        <view wx:if="{{g.picked.length === 0}}" class="side-item empty">本类未选（可跳过）</view>
+        <block wx:for="{{g.picked}}" wx:key="id" wx:for-item="p" wx:for-index="pi">
+          <view class="side-item">
+            <text class="rank">{{pi + 1}}</text>
+            <text class="txt">{{p.text}}<text class="weight"> ×{{p.weight}}</text></text>
+            <view class="btn-mini {{pi === 0 ? 'disabled' : ''}}" catchtap="moveUp" data-group="{{g.id}}" data-id="{{p.id}}">↑</view>
+            <view class="btn-mini {{pi === g.picked.length - 1 ? 'disabled' : ''}}" catchtap="moveDown" data-group="{{g.id}}" data-id="{{p.id}}">↓</view>
+            <view class="btn-mini" catchtap="removeSide" data-group="{{g.id}}" data-id="{{p.id}}">×</view>
+          </view>
+        </block>
+      </view>
+    </block>
+    <view class="hint mt">每类内权重 #1 ×1.0 · #2 ×0.6 · #3 ×0.3 · #4+ ×0.15；三类之间独立累加。</view>
+  </view>
+
+  <!-- Q2~Q9 单选 -->
+  <block wx:for="{{questions}}" wx:key="id" wx:for-item="q" wx:for-index="qi">
+    <view class="card">
+      <view class="q-title"><text class="idx">Q{{qi + 2}}.</text>{{q.title}}</view>
+      <radio-group class="radio-group" bindchange="onRadio" data-qid="{{q.id}}">
+        <block wx:for="{{q.opts}}" wx:key="id" wx:for-item="o">
+          <label class="opt {{answers[q.id] === o.id ? 'checked' : ''}}">
+            <radio value="{{o.id}}" checked="{{answers[q.id] === o.id}}" color="#2f6feb" />
+            <text class="opt-text">{{o.text}}</text>
+          </label>
+        </block>
+      </radio-group>
+    </view>
+  </block>
+
+  <view class="actions">
+    <button class="primary" bindtap="onSubmit">计算配置</button>
+    <button bindtap="onReset">清空</button>
+    <button bindtap="onSample">填样例</button>
+  </view>
+
+  <view wx:if="{{result}}" class="card result">
+    <block wx:if="{{result.error}}">
+      <view class="err">{{result.error}}</view>
+    </block>
+    <block wx:else>
+      <view class="row">
+        <text class="tag ok">配置方向</text>
+        <text class="big">{{result.dir.dir}}</text>
+      </view>
+      <view class="row">
+        <text class="tag">预算档</text>
+        <text>总预算 <text class="bold">{{result.budget.totalBucket.label}}</text>{{result.budget.peripheralCost > 0 ? "（含外设 ¥" + result.budget.peripheralCost + "）" : ""}} → 主机预算 <text class="bold">{{result.budget.hostBucket.label}}</text>，规划价 ¥{{result.budget.hostPlan}}</text>
+      </view>
+      <view class="kv">判定：{{result.dir.reasonText}}；预算来源：{{result.budget.source}}</view>
+      <view wx:if="{{result.sideTags.length > 0}}" class="kv tag-row">
+        <text>Q1 加权：</text>
+        <block wx:for="{{result.sideTags}}" wx:key="id" wx:for-item="t">
+          <text class="tag small">[{{t.group}}] #{{t.rank}} {{t.text}} ×{{t.weight}}</text>
+        </block>
+      </view>
+
+      <view class="tier-title">三档配置推荐</view>
+      <block wx:for="{{result.tiers}}" wx:key="name" wx:for-item="t">
+        <view class="tier">
+          <view class="tier-head">
+            <text class="tier-name">{{t.name}}</text>
+            <text class="price">¥{{t.priceRange[0]}}~{{t.priceRange[1]}}</text>
+          </view>
+          <view class="tier-row"><text class="k">CPU</text><text class="v">{{t.cpu}}</text></view>
+          <view class="tier-row"><text class="k">显卡</text><text class="v">{{t.gpu}}</text></view>
+          <view class="tier-row"><text class="k">内存</text><text class="v">{{t.mem}}</text></view>
+          <view class="tier-row"><text class="k">SSD</text><text class="v">{{t.ssd}}</text></view>
+          <view class="tier-row"><text class="k">主板</text><text class="v">{{t.mb}}</text></view>
+          <view class="tier-row"><text class="k">电源</text><text class="v">{{t.psu}}</text></view>
+        </view>
+      </block>
+
+      <view wx:if="{{result.tips.length > 0}}" class="tips">
+        <view class="tips-title">升级建议</view>
+        <block wx:for="{{result.tips}}" wx:key="*this" wx:for-item="tip">
+          <view class="kv">· {{tip}}</view>
+        </block>
+      </view>
+    </block>
+  </view>
+
+  <view class="footer-space"></view>
+</view>

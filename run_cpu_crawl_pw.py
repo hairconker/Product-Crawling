@@ -182,6 +182,8 @@ UA_MOBILE = (
 SCROLL_DELAY_MS = 2200           # 每次滚动后等待
 PAGE_DELAY_MS = 4500              # 同平台内翻页间隔
 PLATFORM_DELAY_SEC = 6.0          # 跨平台间隔
+KEYWORD_DELAY_SEC = 15.0          # 同平台内换关键词的间隔（批量爬取，保护账号）
+KEYWORD_JITTER_SEC = 8.0          # 关键词间隔随机抖动 ± 8s，避免规律性请求
 CAPTCHA_WAIT_SEC = 300            # 滑块/验证码出现时最多等用户 5 分钟
 
 
@@ -337,6 +339,59 @@ def _wait_for_captcha_pass(
             return True
     log.error(f"[{platform}] 滑块等待超时（{timeout_sec}s），放弃本平台")
     return False
+
+
+def _goto_with_retry(
+    page: Page,
+    url: str,
+    platform: str,
+    *,
+    wait_until: str = "domcontentloaded",
+    timeout_ms: int = 30000,
+    retries: int = 2,
+    backoff_sec: float = 8.0,
+) -> None:
+    """带重试的 goto。
+
+    针对：
+    - `net::ERR_CONNECTION_CLOSED` / `ERR_CONNECTION_RESET`：IP 被服务端短时间限流，等一会儿通常恢复
+    - `ERR_NAME_NOT_RESOLVED`：DNS 抖动
+    - `ERR_TIMED_OUT`：网络层超时（不同于 Playwright 的 load-state 超时）
+
+    最终仍失败抛 `NetworkError`（可被上层 tenacity/backoff 重试）。
+    """
+    # Playwright 的原生 Error 类（不是 PWTimeout）
+    from playwright.sync_api import Error as PWError
+
+    last_err: str = ""
+    for attempt in range(retries + 1):
+        try:
+            page.goto(url, wait_until=wait_until, timeout=timeout_ms)
+            return
+        except PWTimeout as e:
+            last_err = f"PWTimeout: {e}"
+            log.warning(f"[{platform}] goto {url} 超时（{attempt + 1}/{retries + 1}）: {last_err[:120]}")
+        except PWError as e:
+            msg = str(e)
+            last_err = f"PWError: {msg}"
+            if any(hint in msg for hint in ("net::ERR_", "ERR_CONNECTION", "ERR_NAME_", "ERR_TIMED_OUT", "ERR_SOCKET_")):
+                log.warning(
+                    f"[{platform}] goto {url} 网络层错误（{attempt + 1}/{retries + 1}）: {msg[:160]} "
+                    f"—— 可能被服务端短时限流"
+                )
+            else:
+                # 非网络错误（如协议错误）直接向上抛
+                raise
+        if attempt < retries:
+            wait = backoff_sec * (attempt + 1)
+            log.info(f"[{platform}] 等 {wait:.1f}s 后重试 goto ...")
+            time.sleep(wait)
+
+    raise NetworkError(
+        f"{platform} goto {url} 重试 {retries + 1} 次全部失败（最后错误：{last_err[:200]}）"
+        f"。若多次出现可能 IP 被淘宝/京东临时限流，建议：1) 等 15-30 分钟 2) 换网络/代理 3) 降低爬取频率",
+        platform=platform, url=url,
+    )
 
 
 def _wait_for_products(
@@ -623,7 +678,10 @@ def crawl_jd_pw(
             )
             log.info(f"[jd] page {i + 1}/{max_pages} → {url}")
             try:
-                page.goto(url, wait_until="domcontentloaded", timeout=30000)
+                _goto_with_retry(page, url, "jd")
+            except NetworkError as e:
+                log.warning(f"[jd] page {pnum} goto 最终失败: {e}，跳过此页")
+                continue
             except PWTimeout:
                 log.warning(f"[jd] page {pnum} goto 超时，尝试继续")
 
@@ -671,8 +729,7 @@ def crawl_jd_pw(
                     seen[prod.item_id] = prod
 
         log.info(f"[jd] 拦截 {len(mtop_batches)} 批 XHR，去重后 {len(seen)} 条")
-        if seen:
-            refresh_storage_state(context, "jd")
+        # 登录态刷新统一在 platform 批次末尾做一次（减少盘 I/O）
     finally:
         try:
             page.remove_listener("response", _on_response)
@@ -808,7 +865,9 @@ def crawl_xianyu_pw(
     try:
         log.info("[xianyu] → https://www.goofish.com (搜索框输入模式)")
         try:
-            page.goto("https://www.goofish.com", wait_until="domcontentloaded", timeout=30000)
+            _goto_with_retry(page, "https://www.goofish.com", "xianyu")
+        except NetworkError:
+            raise  # 上层 run_platform_batch 会归类为 NetworkError 继续下一关键词
         except PWTimeout:
             log.warning("[xianyu] 首页 goto 超时")
 
@@ -930,8 +989,7 @@ def crawl_xianyu_pw(
                     seen[prod.item_id] = prod
 
         log.info(f"[xianyu] 拦截 {len(mtop_batches)} 批 mtop 响应，去重后 {len(seen)} 条")
-        if seen:
-            refresh_storage_state(context, "xianyu")
+        # 登录态刷新统一在 platform 批次末尾做一次
     finally:
         try:
             page.remove_listener("response", _on_response)
@@ -1137,7 +1195,9 @@ def crawl_taobao_pw(
         # Step 1 首页"暖场"：仅为刷新 cookie / 建立行为画像，不做任何 form 交互
         log.info("[taobao] → https://www.taobao.com （首页暖场，不在此搜索）")
         try:
-            page.goto("https://www.taobao.com", wait_until="domcontentloaded", timeout=30000)
+            _goto_with_retry(page, "https://www.taobao.com", "taobao")
+        except NetworkError:
+            raise  # 明确归类为 NetworkError 而非 UnknownError
         except PWTimeout:
             log.warning("[taobao] 首页 goto 超时")
 
@@ -1166,7 +1226,9 @@ def crawl_taobao_pw(
         search_url = "https://s.taobao.com/search?" + urlencode({"q": keyword})
         log.info(f"[taobao] → {search_url}")
         try:
-            page.goto(search_url, wait_until="domcontentloaded", timeout=30000)
+            _goto_with_retry(page, search_url, "taobao")
+        except NetworkError:
+            raise
         except PWTimeout:
             log.warning("[taobao] 搜索页 goto 超时")
 
@@ -1257,11 +1319,31 @@ def crawl_taobao_pw(
                     const low = text.toLowerCase();
                     if (tokens.length && !tokens.some(t => low.includes(t))) return;
                     seen.add(id);
+                    // 淘宝价格用 CSS Modules：priceInt--xxx + priceFloat--xxx 两个 span 分开
+                    // 前缀稳定，hash 后缀变；优先结构化拼接，失败 fallback 到 innerText 扫描
+                    let priceStr = null;
+                    const intEl = card.querySelector('[class^="priceInt--"], [class*=" priceInt--"]');
+                    if (intEl) {
+                        let v = (intEl.innerText || '').trim();
+                        const floatEl = card.querySelector('[class^="priceFloat--"], [class*=" priceFloat--"]');
+                        if (floatEl) {
+                            const frac = (floatEl.innerText || '').trim();
+                            if (frac) v += frac.startsWith('.') ? frac : ('.' + frac);
+                        }
+                        if (v) priceStr = v;
+                    }
+                    if (!priceStr) {
+                        // fallback：找含 ¥ 的行
+                        const lines = text.split('\n').map(s => s.trim()).filter(Boolean);
+                        const ln = lines.find(l => l.includes('¥'));
+                        if (ln) priceStr = ln;
+                    }
                     const img = card.querySelector('img');
                     out.push({
                         id,
                         href: a.href.startsWith('http') ? a.href : 'https:' + a.href,
                         text: text.slice(0, 500),
+                        price: priceStr,
                         img: img ? (img.src || img.getAttribute('data-src')) : null,
                     });
                 });
@@ -1274,7 +1356,6 @@ def crawl_taobao_pw(
             if it["id"] in seen:
                 continue
             lines = [ln.strip() for ln in it["text"].split("\n") if ln.strip()]
-            price_line = next((ln for ln in lines if "¥" in ln), "")
             title = next((ln for ln in lines if len(ln) > 6 and "¥" not in ln), "")
             shop = next(
                 (ln for ln in reversed(lines) if len(ln) < 30 and "¥" not in ln and ln != title),
@@ -1285,7 +1366,7 @@ def crawl_taobao_pw(
                 item_id=it["id"],
                 title=title[:200],
                 url=it["href"],
-                current_price=_parse_price(price_line),
+                current_price=_parse_price(it.get("price")),
                 shop_name=shop,
                 image_url=it["img"],
             )
@@ -1309,8 +1390,7 @@ def crawl_taobao_pw(
         except Exception:
             pass
 
-        if seen:
-            refresh_storage_state(context, "taobao")
+        # 登录态刷新统一在 platform 批次末尾做一次
     finally:
         # 清理 context 上的 page listener + 所有已挂 response listener 的 page
         try:
@@ -1353,15 +1433,47 @@ if (origQuery) {
 """
 
 
-def run_one(
-    p, platform: str, keyword: str, max_pages: int, headed: bool
-) -> SearchResult:
-    func, state_name, mobile = CRAWLERS[platform]
-    result = SearchResult(
-        platform=platform, keyword=keyword, pages_requested=max_pages, success=False
+def _keyword_sleep(idx: int, total: int, platform: str) -> None:
+    """同平台关键词间节流（带随机抖动，避免规律性请求）。
+
+    用户明确要求"不要快速爬取，保护账号/IP"。实际间隔 = KEYWORD_DELAY_SEC ± KEYWORD_JITTER_SEC。
+    """
+    if idx == 0:
+        return
+    import random
+    wait = KEYWORD_DELAY_SEC + random.uniform(-KEYWORD_JITTER_SEC, KEYWORD_JITTER_SEC)
+    wait = max(3.0, wait)
+    log.info(
+        f"[{platform}] 关键词节流：休眠 {wait:.1f}s 再爬下一个（{idx + 1}/{total}，保护账号）"
     )
+    time.sleep(wait)
+
+
+def run_platform_batch(
+    p: Any,
+    platform: str,
+    keywords: list[str],
+    max_pages: int,
+    headed: bool,
+) -> dict[str, SearchResult]:
+    """同平台批量：一次 browser + 一次登录态 + 循环多关键词。
+
+    优化点：
+    - 只开一次 chromium + 只创建一次 context + 只注入一次 stealth
+    - 每关键词间 _keyword_sleep 节流
+    - 所有关键词爬完后统一 refresh_storage_state 一次（减少盘 I/O）
+    - 单个关键词失败不影响其他关键词
+    """
+    func, state_name, mobile = CRAWLERS[platform]
     state_path = STATE_DIR / state_name
+    results: dict[str, SearchResult] = {
+        kw: SearchResult(
+            platform=platform, keyword=kw, pages_requested=max_pages, success=False
+        )
+        for kw in keywords
+    }
     browser = None
+    context = None
     try:
         browser = p.chromium.launch(
             headless=not headed,
@@ -1378,83 +1490,169 @@ def run_one(
             log.warning(f"[{platform}] 未找到 {state_path}，匿名访问大概率失败")
         context = browser.new_context(**kwargs)
         context.add_init_script(_STEALTH_JS)
-        products = func(context, keyword, max_pages, headed=headed)
-        result.products = products
-        result.success = True
-        log.info(f"[{platform}] 完成，共 {len(products)} 条（已去重）")
-        context.close()
-    except SpiderError as e:
-        result.error = str(e)
-        result.error_type = type(e).__name__
-        log.error(f"[{platform}] {e}")
+
+        any_success = False
+        for idx, kw in enumerate(keywords):
+            _keyword_sleep(idx, len(keywords), platform)
+            log.info(
+                f"[{platform}] ---- 关键词 {idx + 1}/{len(keywords)}: {kw!r} ----"
+            )
+            try:
+                products = func(context, kw, max_pages, headed=headed)
+                results[kw].products = products
+                results[kw].success = True
+                any_success = any_success or bool(products)
+                log.info(f"[{platform}] '{kw}' 完成，共 {len(products)} 条")
+            except SpiderError as e:
+                results[kw].error = str(e)
+                results[kw].error_type = type(e).__name__
+                log.error(f"[{platform}] '{kw}' 失败: {e}")
+            except Exception as e:
+                results[kw].error = f"{type(e).__name__}: {e}"
+                results[kw].error_type = "UnknownError"
+                log.error(
+                    f"[{platform}] '{kw}' 未捕获异常:\n{traceback.format_exc()}"
+                )
+
+        # 全部关键词跑完后统一刷新登录态
+        if any_success and context is not None:
+            try:
+                refresh_storage_state(context, platform)
+            except Exception as e:
+                log.warning(f"[{platform}] 批次末尾刷新 state 失败: {e}")
     except Exception as e:
-        result.error = f"{type(e).__name__}: {e}"
-        result.error_type = "UnknownError"
-        log.error(f"[{platform}] 未捕获异常:\n{traceback.format_exc()}")
+        log.error(f"[{platform}] context 级异常:\n{traceback.format_exc()}")
+        for kw in keywords:
+            if not results[kw].error:
+                results[kw].error = f"{type(e).__name__}: {e}"
+                results[kw].error_type = "UnknownError"
     finally:
-        if browser:
+        if context is not None:
+            try:
+                context.close()
+            except Exception:
+                pass
+        if browser is not None:
             try:
                 browser.close()
             except Exception:
                 pass
-    return result
+    return results
 
 
-def print_report(keyword: str, results: dict[str, SearchResult]) -> None:
+def print_report(
+    keywords: list[str],
+    results: dict[str, dict[str, SearchResult]],
+    platforms: list[str],
+) -> None:
+    """按关键词分组打印；JSON 以 {keyword: {platform: ...}} 嵌套结构输出。"""
+    ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"\n{'=' * 72}")
-    print(f"CPU 关键词：{keyword}")
-    print(f"爬取时间：{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
-    print(f"{'=' * 72}\n")
-    for name, r in results.items():
-        status = "OK" if r.success else "FAIL"
-        print(
-            f"[{status}] {name.upper():8s} 请求页数={r.pages_requested}  "
-            f"去重后商品={r.count}  "
-            + (f"错误={r.error_type}" if not r.success else "")
-        )
-        if not r.success and r.error:
-            print(f"   原因: {r.error}")
-        # 按价格排序显示前 10 条
-        shown = sorted(
-            r.products, key=lambda p: (p.current_price is None, p.current_price or 1e9)
-        )[:10]
-        for i, pr in enumerate(shown, 1):
-            price = f"¥{pr.current_price:.2f}" if pr.current_price else "N/A"
-            print(f"   {i:2d}. {price:10s}  {pr.title[:55]}")
-            print(f"       {pr.url}")
-        if r.count > 10:
-            print(f"   ... 另有 {r.count - 10} 条（已写入 JSON 报告）")
-        print()
+    print(f"批量搜索报告 · {len(keywords)} 关键词 × {len(platforms)} 平台")
+    print(f"爬取时间：{ts}")
+    print(f"{'=' * 72}")
+
+    for kw in keywords:
+        print(f"\n── 关键词 {kw!r} ──")
+        per_kw = results.get(kw, {})
+        for name in platforms:
+            r = per_kw.get(name)
+            if r is None:
+                print(f"[SKIP] {name.upper():8s} 未执行")
+                continue
+            status = "OK" if r.success else "FAIL"
+            print(
+                f"[{status}] {name.upper():8s} 去重后商品={r.count}  "
+                + (f"错误={r.error_type}" if not r.success else "")
+            )
+            if not r.success and r.error:
+                print(f"   原因: {r.error[:160]}")
+            shown = sorted(
+                r.products,
+                key=lambda p: (p.current_price is None, p.current_price or 1e9),
+            )[:5]
+            for i, pr in enumerate(shown, 1):
+                price = f"¥{pr.current_price:.2f}" if pr.current_price else "N/A"
+                print(f"   {i}. {price:10s}  {pr.title[:50]}")
+            if r.count > 5:
+                print(f"   ... 另有 {r.count - 5} 条（见 JSON）")
 
     out = LOG_DIR / f"report_pw_{datetime.now().strftime('%Y%m%d_%H%M%S')}.json"
     with open(out, "w", encoding="utf-8") as f:
         json.dump(
             {
-                "keyword": keyword,
+                "keywords": keywords,
+                "platforms": platforms,
                 "crawled_at": datetime.now().isoformat(),
                 "results": {
-                    name: {
-                        "success": r.success,
-                        "pages_requested": r.pages_requested,
-                        "count": r.count,
-                        "error": r.error,
-                        "error_type": r.error_type,
-                        "products": [asdict(pr) for pr in r.products],
+                    kw: {
+                        name: {
+                            "success": r.success,
+                            "pages_requested": r.pages_requested,
+                            "count": r.count,
+                            "error": r.error,
+                            "error_type": r.error_type,
+                            "products": [asdict(pr) for pr in r.products],
+                        }
+                        for name, r in per_kw.items()
                     }
-                    for name, r in results.items()
+                    for kw, per_kw in results.items()
                 },
             },
             f,
             ensure_ascii=False,
             indent=2,
         )
-    print(f"详细 JSON 报告：{out}")
+    print(f"\n详细 JSON 报告：{out}")
     print(f"日志：logs/crawl_pw_{datetime.now().strftime('%Y-%m-%d')}.log")
 
 
+def _parse_keywords(args: argparse.Namespace) -> list[str]:
+    """从命令行解析关键词列表。优先级：--keywords-file > --keywords > positional keyword。"""
+    if args.keywords_file:
+        path = Path(args.keywords_file)
+        if not path.exists():
+            raise FileNotFoundError(f"--keywords-file 指定的文件不存在: {path}")
+        kws: list[str] = []
+        for line in path.read_text(encoding="utf-8").splitlines():
+            s = line.strip()
+            if s and not s.startswith("#"):
+                kws.append(s)
+        return kws
+    if args.keywords:
+        return [k.strip() for k in args.keywords.split(",") if k.strip()]
+    return [args.keyword]
+
+
+def _estimate_duration(
+    n_keywords: int, n_platforms: int, max_pages: int
+) -> float:
+    """估算批量任务耗时（秒），让用户知道会跑多久。"""
+    per_kw_per_pf = 25 + max_pages * 8  # 粗略估计：启动+搜索 25s，每页 8s
+    crawl_time = n_keywords * n_platforms * per_kw_per_pf
+    throttle_time = (
+        (n_keywords - 1) * KEYWORD_DELAY_SEC * n_platforms
+        + (n_platforms - 1) * PLATFORM_DELAY_SEC
+    )
+    return crawl_time + throttle_time
+
+
 def main() -> int:
-    parser = argparse.ArgumentParser(description="CPU 价格爬虫 · Playwright 版")
-    parser.add_argument("keyword", nargs="?", default="i5-12400F")
+    parser = argparse.ArgumentParser(
+        description="多平台商品搜索爬虫 · Playwright 版（支持批量关键词）"
+    )
+    parser.add_argument(
+        "keyword", nargs="?", default="i5-12400F",
+        help="单关键词（未指定 --keywords/--keywords-file 时使用）",
+    )
+    parser.add_argument(
+        "--keywords",
+        help='批量：逗号分隔的关键词列表，如 "i5-12400F,R7 7800X3D,i9-14900K"',
+    )
+    parser.add_argument(
+        "--keywords-file",
+        help="批量：每行一个关键词的文本文件（# 开头为注释）",
+    )
     parser.add_argument(
         "--only",
         choices=list(CRAWLERS.keys()),
@@ -1469,26 +1667,53 @@ def main() -> int:
     )
     args = parser.parse_args()
 
-    platforms = args.only or list(CRAWLERS.keys())
-    log.info(
-        f"任务：keyword='{args.keyword}' platforms={platforms} "
-        f"pages={args.pages} headed={args.headed}"
-    )
+    try:
+        keywords = _parse_keywords(args)
+    except FileNotFoundError as e:
+        log.error(str(e))
+        return 2
+    if not keywords:
+        log.error("关键词列表为空")
+        return 2
 
-    results: dict[str, SearchResult] = {}
+    platforms = args.only or list(CRAWLERS.keys())
+    est_sec = _estimate_duration(len(keywords), len(platforms), args.pages)
+    log.info(
+        f"批量任务：{len(keywords)} 关键词 × {len(platforms)} 平台 × {args.pages} 页 "
+        f"headed={args.headed}"
+    )
+    log.info(f"关键词: {keywords}")
+    log.info(f"预估耗时约 {est_sec / 60:.1f} 分钟（含节流保护，请耐心）")
+
+    results: dict[str, dict[str, SearchResult]] = {kw: {} for kw in keywords}
     with sync_playwright() as p:
-        for idx, name in enumerate(platforms):
-            if idx > 0:
+        for pf_idx, pf_name in enumerate(platforms):
+            if pf_idx > 0:
                 log.info(
-                    f"跨平台节流：休眠 {PLATFORM_DELAY_SEC}s 再继续下一平台（保护账号）"
+                    f"跨平台节流：休眠 {PLATFORM_DELAY_SEC}s 后进入 {pf_name}"
                 )
                 time.sleep(PLATFORM_DELAY_SEC)
-            log.info(f"========== 开始 {name} ==========")
+            log.info(
+                f"========== 开始 {pf_name}（批量 {len(keywords)} 关键词） =========="
+            )
             t0 = time.monotonic()
-            results[name] = run_one(p, name, args.keyword, args.pages, args.headed)
-            log.info(f"========== {name} 耗时 {time.monotonic() - t0:.2f}s ==========")
-    print_report(args.keyword, results)
-    return 0 if any(r.success for r in results.values()) else 1
+            batch_result = run_platform_batch(
+                p, pf_name, keywords, args.pages, args.headed
+            )
+            elapsed = time.monotonic() - t0
+            log.info(
+                f"========== {pf_name} 批次完成 耗时 {elapsed:.1f}s "
+                f"（{elapsed / len(keywords):.1f}s/关键词均摊） =========="
+            )
+            for kw, r in batch_result.items():
+                results[kw][pf_name] = r
+
+    print_report(keywords, results, platforms)
+
+    any_success = any(
+        r.success for per_kw in results.values() for r in per_kw.values()
+    )
+    return 0 if any_success else 1
 
 
 if __name__ == "__main__":

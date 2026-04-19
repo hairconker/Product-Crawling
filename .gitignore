@@ -27,5 +27,8 @@ vendor/
 # Codex 插件标记
 .codex
 
+# Claude Code 本地权限设置（每机不同）
+.claude/settings.local.json
+
 # 历史遗留（开发中跑过的 pdd 登录态）
 state/pdd_*

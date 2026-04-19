@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>爬取结果查看器 · Product Crawling Viewer</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        padding: 16px;
+        font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #f5f5f7;
+        color: #1d1d1f;
+        line-height: 1.5;
+    }
+    header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 16px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        margin-bottom: 16px;
+    }
+    header h1 { font-size: 18px; margin: 0; color: #0071e3; }
+    header .summary { color: #6e6e73; font-size: 13px; margin-left: auto; }
+    button, .btn, label.btn {
+        padding: 6px 12px;
+        border: 1px solid #d2d2d7;
+        background: #fff;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 13px;
+        color: #1d1d1f;
+        transition: background 0.15s;
+    }
+    button:hover, .btn:hover { background: #f5f5f7; }
+    button.primary { background: #0071e3; color: #fff; border-color: #0071e3; }
+    button.primary:hover { background: #0077ed; }
+    input[type=file] { display: none; }
+    input[type=number], input[type=search] {
+        padding: 5px 8px;
+        border: 1px solid #d2d2d7;
+        border-radius: 6px;
+        font-size: 13px;
+        width: 120px;
+    }
+
+    .tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-bottom: 12px;
+    }
+    .tab {
+        padding: 8px 16px;
+        border-radius: 8px 8px 0 0;
+        cursor: pointer;
+        background: #fff;
+        border: 1px solid #e5e5ea;
+        border-bottom: none;
+        font-size: 14px;
+        color: #6e6e73;
+        user-select: none;
+    }
+    .tab.active { background: #0071e3; color: #fff; border-color: #0071e3; }
+    .tab .badge {
+        display: inline-block;
+        margin-left: 8px;
+        padding: 1px 6px;
+        border-radius: 10px;
+        background: rgba(255,255,255,0.25);
+        font-size: 11px;
+    }
+    .tab:not(.active) .badge { background: #f5f5f7; color: #6e6e73; }
+
+    .panel {
+        background: #fff;
+        border-radius: 10px;
+        padding: 14px 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+    }
+    .toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        padding: 10px 16px 0;
+        margin-bottom: 12px;
+    }
+    .toolbar label { font-size: 13px; color: #6e6e73; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td {
+        padding: 8px 10px;
+        text-align: left;
+        border-bottom: 1px solid #e5e5ea;
+        vertical-align: top;
+    }
+    th {
+        background: #fafafa;
+        font-weight: 600;
+        color: #1d1d1f;
+        cursor: pointer;
+        user-select: none;
+        position: sticky;
+        top: 0;
+    }
+    th.sortable:hover { background: #f0f0f3; }
+    th.sort-asc::after { content: " ▲"; font-size: 10px; color: #0071e3; }
+    th.sort-desc::after { content: " ▼"; font-size: 10px; color: #0071e3; }
+    tr:hover { background: #fafafa; }
+
+    td.price { font-weight: 600; color: #b12704; white-space: nowrap; }
+    td.price.low { color: #888; font-weight: normal; }
+    td.title { max-width: 400px; }
+    td.title a { color: #1d1d1f; text-decoration: none; }
+    td.title a:hover { color: #0071e3; text-decoration: underline; }
+    td.shop { color: #6e6e73; font-size: 12px; }
+
+    .platform-tag {
+        display: inline-block;
+        padding: 1px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+        margin-right: 4px;
+    }
+    .platform-tag.jd { background: #e8f4fe; color: #0071e3; }
+    .platform-tag.xianyu { background: #fff3e0; color: #e56408; }
+    .platform-tag.taobao { background: #fef0f0; color: #c93535; }
+
+    .empty {
+        padding: 40px;
+        text-align: center;
+        color: #6e6e73;
+        font-size: 14px;
+    }
+    .fail-msg { color: #c93535; font-size: 12px; padding: 8px; background: #fef0f0; border-radius: 6px; margin-top: 8px; }
+    .suspicious { background: #fff7e6 !important; }
+    .drop-zone {
+        padding: 48px;
+        text-align: center;
+        border: 2px dashed #d2d2d7;
+        border-radius: 12px;
+        color: #6e6e73;
+        background: #fff;
+        cursor: pointer;
+    }
+    .drop-zone.dragover { border-color: #0071e3; background: #f0f7ff; color: #0071e3; }
+    img.thumb {
+        width: 48px; height: 48px;
+        border-radius: 4px;
+        object-fit: cover;
+        background: #f5f5f7;
+    }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🕷 爬取结果查看器</h1>
+    <label class="btn" for="fileInput">📁 加载 JSON 报告</label>
+    <input type="file" id="fileInput" accept=".json">
+    <button id="exportCsv">📊 导出 CSV</button>
+    <span class="summary" id="summary"></span>
+</header>
+
+<div id="app"></div>
+
+<template id="dropTpl">
+    <div class="drop-zone" id="dropZone">
+        <p style="font-size: 16px; margin: 0 0 8px;">拖拽 <code>logs/report_pw_*.json</code> 到此处</p>
+        <p style="margin: 0;">或点击上方"加载 JSON 报告"按钮</p>
+    </div>
+</template>
+
+<script>
+'use strict';
+
+const $ = (sel, parent = document) => parent.querySelector(sel);
+const $$ = (sel, parent = document) => [...parent.querySelectorAll(sel)];
+const app = $('#app');
+const summaryEl = $('#summary');
+
+let REPORT = null;      // 加载的整份报告 JSON
+let CURRENT_KW = null;  // 当前选中的关键词
+let CURRENT_PF = null;  // 当前选中的平台
+let SORT_KEY = 'price'; // 当前排序字段
+let SORT_DIR = 'asc';   // 排序方向
+let FILTERS = { minPrice: 0, maxPrice: 0, search: '' };
+
+// ---------------------- 初始 ----------------------
+renderDropZone();
+
+// ---------------------- 文件加载 ----------------------
+$('#fileInput').addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) loadFile(file);
+});
+
+function renderDropZone() {
+    app.innerHTML = $('#dropTpl').innerHTML;
+    const dz = $('#dropZone');
+    dz.addEventListener('click', () => $('#fileInput').click());
+    dz.addEventListener('dragover', (e) => { e.preventDefault(); dz.classList.add('dragover'); });
+    dz.addEventListener('dragleave', () => dz.classList.remove('dragover'));
+    dz.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dz.classList.remove('dragover');
+        const file = e.dataTransfer.files[0];
+        if (file) loadFile(file);
+    });
+}
+
+function loadFile(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        try {
+            REPORT = JSON.parse(e.target.result);
+            // 兼容单关键词旧格式（{keyword, results: {platform: ...}}）
+            if (REPORT.keyword && !REPORT.keywords) {
+                REPORT = {
+                    keywords: [REPORT.keyword],
+                    platforms: Object.keys(REPORT.results || {}),
+                    crawled_at: REPORT.crawled_at,
+                    results: { [REPORT.keyword]: REPORT.results || {} },
+                };
+            }
+            initView();
+        } catch (err) {
+            alert('JSON 解析失败: ' + err.message);
+            console.error(err);
+        }
+    };
+    reader.readAsText(file);
+}
+
+// ---------------------- 初始化视图 ----------------------
+function initView() {
+    const kws = REPORT.keywords || [];
+    const pfs = REPORT.platforms || [];
+    if (!kws.length) return alert('报告里没有关键词数据');
+    CURRENT_KW = kws[0];
+    CURRENT_PF = pfs[0] || null;
+    summaryEl.textContent = `${kws.length} 关键词 × ${pfs.length} 平台 · 爬取于 ${REPORT.crawled_at || '-'}`;
+    render();
+}
+
+function render() {
+    const kws = REPORT.keywords;
+    const pfs = REPORT.platforms;
+    const perKw = REPORT.results[CURRENT_KW] || {};
+    const cur = perKw[CURRENT_PF] || null;
+
+    app.innerHTML = `
+        <div class="tabs" id="kwTabs">${kws.map(kw => {
+            const cnt = sumKwCount(kw);
+            return `<div class="tab ${kw === CURRENT_KW ? 'active' : ''}" data-kw="${esc(kw)}">${esc(kw)} <span class="badge">${cnt}</span></div>`;
+        }).join('')}</div>
+        <div class="tabs" id="pfTabs" style="margin-top: -12px;">${pfs.map(pf => {
+            const r = perKw[pf] || {};
+            const cls = r.success ? '' : 'style="color:#c93535"';
+            return `<div class="tab ${pf === CURRENT_PF ? 'active' : ''}" data-pf="${esc(pf)}" ${cls}>${esc(pf.toUpperCase())} <span class="badge">${r.count ?? 0}</span></div>`;
+        }).join('')}</div>
+        <div class="panel">
+            <div class="toolbar">
+                <label>💰 价格范围</label>
+                <input type="number" id="minPrice" placeholder="min" value="${FILTERS.minPrice || ''}" />
+                <span>—</span>
+                <input type="number" id="maxPrice" placeholder="max" value="${FILTERS.maxPrice || ''}" />
+                <label>🔍 标题包含</label>
+                <input type="search" id="searchBox" placeholder="关键字" value="${esc(FILTERS.search)}" />
+                <span style="margin-left:auto; color:#6e6e73; font-size:12px;" id="listStat"></span>
+            </div>
+            <div id="listArea"></div>
+        </div>
+    `;
+    // 关键词 tabs
+    $$('#kwTabs .tab').forEach(el => el.addEventListener('click', () => {
+        CURRENT_KW = el.dataset.kw;
+        render();
+    }));
+    // 平台 tabs
+    $$('#pfTabs .tab').forEach(el => el.addEventListener('click', () => {
+        CURRENT_PF = el.dataset.pf;
+        render();
+    }));
+    // 过滤控件
+    $('#minPrice').addEventListener('input', (e) => { FILTERS.minPrice = parseFloat(e.target.value) || 0; renderList(); });
+    $('#maxPrice').addEventListener('input', (e) => { FILTERS.maxPrice = parseFloat(e.target.value) || 0; renderList(); });
+    $('#searchBox').addEventListener('input', (e) => { FILTERS.search = e.target.value.toLowerCase(); renderList(); });
+
+    renderList();
+}
+
+function renderList() {
+    const perKw = REPORT.results[CURRENT_KW] || {};
+    const cur = perKw[CURRENT_PF];
+    const area = $('#listArea');
+    if (!cur) {
+        area.innerHTML = `<div class="empty">无该平台数据</div>`;
+        return;
+    }
+    if (!cur.success) {
+        area.innerHTML = `<div class="fail-msg">❌ [${cur.error_type || 'FAIL'}] ${esc(cur.error || '')}</div>`;
+        return;
+    }
+    let products = (cur.products || []).slice();
+
+    // 过滤
+    if (FILTERS.minPrice > 0) products = products.filter(p => (p.current_price ?? 0) >= FILTERS.minPrice);
+    if (FILTERS.maxPrice > 0) products = products.filter(p => (p.current_price ?? Infinity) <= FILTERS.maxPrice);
+    if (FILTERS.search) products = products.filter(p => (p.title || '').toLowerCase().includes(FILTERS.search));
+
+    // 排序
+    products.sort((a, b) => {
+        if (SORT_KEY === 'price') {
+            const va = a.current_price ?? (SORT_DIR === 'asc' ? Infinity : -Infinity);
+            const vb = b.current_price ?? (SORT_DIR === 'asc' ? Infinity : -Infinity);
+            return SORT_DIR === 'asc' ? va - vb : vb - va;
+        } else if (SORT_KEY === 'title') {
+            return SORT_DIR === 'asc'
+                ? (a.title || '').localeCompare(b.title || '')
+                : (b.title || '').localeCompare(a.title || '');
+        }
+        return 0;
+    });
+
+    // 价格异常检测：低于平均价 20% 标黄底（电商常见多SKU诱饵价）
+    const prices = products.map(p => p.current_price).filter(Boolean);
+    const avg = prices.length ? prices.reduce((a, b) => a + b, 0) / prices.length : 0;
+    const lowThreshold = avg * 0.2;
+
+    $('#listStat').textContent = `显示 ${products.length} / ${cur.products?.length || 0} 条${avg ? `；均价 ¥${avg.toFixed(0)}` : ''}`;
+
+    if (!products.length) {
+        area.innerHTML = `<div class="empty">过滤后无商品</div>`;
+        return;
+    }
+
+    area.innerHTML = `
+        <table>
+            <thead>
+                <tr>
+                    <th style="width:50px">#</th>
+                    <th style="width:60px">图</th>
+                    <th class="sortable" data-sort="price">价格${arrow('price')}</th>
+                    <th class="sortable" data-sort="title">标题${arrow('title')}</th>
+                    <th style="width:140px">店铺 / 地区</th>
+                    <th style="width:60px">链接</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${products.map((p, i) => `
+                    <tr class="${p.current_price && p.current_price < lowThreshold ? 'suspicious' : ''}" title="${p.current_price && p.current_price < lowThreshold ? '⚠️ 低于均价 20%，可能是多SKU诱饵价' : ''}">
+                        <td>${i + 1}</td>
+                        <td>${p.image_url ? `<img class="thumb" src="${esc(p.image_url)}" loading="lazy" onerror="this.style.display='none'">` : ''}</td>
+                        <td class="price ${p.current_price && p.current_price < lowThreshold ? 'low' : ''}">${p.current_price != null ? '¥' + p.current_price.toFixed(2) : 'N/A'}</td>
+                        <td class="title"><a href="${esc(p.url || '#')}" target="_blank" rel="noopener">${esc((p.title || '').slice(0, 100))}</a></td>
+                        <td class="shop">${esc(p.shop_name || p.location || '-')}</td>
+                        <td><a href="${esc(p.url || '#')}" target="_blank" rel="noopener">↗</a></td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+    `;
+    $$('th.sortable').forEach(th => th.addEventListener('click', () => {
+        const key = th.dataset.sort;
+        if (SORT_KEY === key) SORT_DIR = SORT_DIR === 'asc' ? 'desc' : 'asc';
+        else { SORT_KEY = key; SORT_DIR = 'asc'; }
+        renderList();
+    }));
+}
+
+function arrow(key) {
+    if (SORT_KEY !== key) return '';
+    return SORT_DIR === 'asc' ? ' ▲' : ' ▼';
+}
+
+function sumKwCount(kw) {
+    const perPf = REPORT.results[kw] || {};
+    return Object.values(perPf).reduce((s, r) => s + (r.count || 0), 0);
+}
+
+function esc(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+
+// ---------------------- 导出 CSV ----------------------
+$('#exportCsv').addEventListener('click', () => {
+    if (!REPORT) return alert('先加载 JSON 报告');
+    const rows = [['keyword', 'platform', 'item_id', 'title', 'price', 'shop', 'location', 'url']];
+    for (const kw of REPORT.keywords) {
+        for (const pf of REPORT.platforms) {
+            const r = REPORT.results[kw]?.[pf];
+            if (!r?.products) continue;
+            for (const p of r.products) {
+                rows.push([
+                    kw, pf, p.item_id || '',
+                    (p.title || '').replace(/\s+/g, ' '),
+                    p.current_price ?? '',
+                    p.shop_name || '',
+                    p.location || '',
+                    p.url || '',
+                ]);
+            }
+        }
+    }
+    const csv = '\uFEFF' + rows.map(row =>
+        row.map(c => `"${String(c).replace(/"/g, '""')}"`).join(',')
+    ).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `crawl_${new Date().toISOString().slice(0,19).replace(/[:T]/g,'-')}.csv`;
+    a.click();
+});
+</script>
+</body>
+</html>
