@@ -1,0 +1,33 @@
+# 核心
+loguru>=0.7.2
+pydantic>=2.6.0
+pydantic-settings>=2.2.0
+PyYAML>=6.0.1
+tenacity>=8.2.3
+
+# HTTP
+httpx[http2]>=0.27.0
+requests>=2.32.0
+
+# 浏览器自动化（闲鱼/淘宝必需）
+playwright>=1.44.0
+DrissionPage>=4.1.0
+
+# 解析
+lxml>=5.2.0
+parsel>=1.9.0
+beautifulsoup4>=4.12.0
+
+# 对外接口
+fastapi>=0.111.0
+uvicorn[standard]>=0.30.0
+typer>=0.12.0
+rich>=13.7.0
+
+# 持久化
+sqlmodel>=0.0.16
+
+# 测试
+pytest>=8.2.0
+pytest-asyncio>=0.23.0
+pytest-cov>=5.0.0

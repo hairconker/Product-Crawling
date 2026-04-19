@@ -1,0 +1,45 @@
+# 多平台爬虫配置示例
+# 用法：cp config.yaml.example config.yaml，然后按平台填入真实 cookie / state 路径
+
+xianyu:
+  enabled: true
+  # 闲鱼登录态：通过 scripts/xianyu_login.py 导出
+  storage_state_path: state/xianyu_state.json
+  min_interval: 2.0
+  extra:
+    headless: false   # 闲鱼无头不稳定，默认 headed
+
+jd:
+  enabled: true
+  # 京东可不登录搜索；如需登录态，填 cookie 字符串
+  cookie: ""
+  min_interval: 1.0
+
+taobao:
+  enabled: true
+  # 淘宝必须登录；通过 scripts/taobao_login.py 导出
+  storage_state_path: state/taobao_cookies.json
+  min_interval: 3.0
+
+pdd:
+  enabled: true
+  # 拼多多 cookie 中需含 PDDAccessToken
+  cookie: ""
+  min_interval: 2.0
+  extra:
+    node_path: node              # 用于执行 anti_content 的 node 可执行文件
+    js_dir: spiders/_pdd_js       # anti_content JS 所在目录
+
+debug:
+  # 出错时保存响应 HTML / JSON 到 logs/debug/
+  save_html_on_error: true
+  # Playwright/DrissionPage 出错时自动截图
+  screenshot_on_error: true
+  # 全局抬高日志等级到 DEBUG
+  verbose: false
+
+proxy:
+  enabled: false
+  pool: []
+    # - http://user:pass@1.2.3.4:8080
+    # - socks5://1.2.3.4:1080

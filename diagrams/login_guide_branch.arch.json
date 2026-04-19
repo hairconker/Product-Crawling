@@ -1,0 +1,252 @@
+{
+  "version": 1,
+  "title": "四平台登录引导分支图",
+  "type": "engineering-diagram",
+  "source": "generated",
+  "profile": "engineering-review",
+  "theme": "tech-blue",
+  "layout": "horizontal",
+  "counts": {
+    "nodes": 16,
+    "edges": 20,
+    "modules": 0
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "label": "开始\\n四平台登录引导",
+      "type": "terminal",
+      "size": "large"
+    },
+    {
+      "id": "prep",
+      "label": "首次准备\\n检查 pip\\n安装 Playwright\\n安装 Chromium",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "choose_mode",
+      "label": "选择登录模式",
+      "type": "decision",
+      "size": "large"
+    },
+    {
+      "id": "login_all",
+      "label": "运行\\npython scripts\\\\login_helper.py all",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "login_one",
+      "label": "运行单平台\\njd / xianyu / taobao",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "manual_fallback",
+      "label": "手动备选\\n浏览器 F12 复制 Cookie\\n写入 state/{platform}_cookie.txt",
+      "type": "document",
+      "size": "large"
+    },
+    {
+      "id": "browser_step",
+      "label": "浏览器操作\\n扫码或输入账号密码完成登录",
+      "type": "user",
+      "size": "large"
+    },
+    {
+      "id": "success_detect",
+      "label": "检测到登录 Cookie?",
+      "type": "decision",
+      "size": "large"
+    },
+    {
+      "id": "save_state",
+      "label": "自动保存登录态\\nstate/*_state.json\\nstate/*_cookie.txt",
+      "type": "database",
+      "size": "large"
+    },
+    {
+      "id": "timeout",
+      "label": "等待超时\\n默认 10 分钟",
+      "type": "process",
+      "size": "medium"
+    },
+    {
+      "id": "retry_decision",
+      "label": "继续处理?",
+      "type": "decision",
+      "size": "medium"
+    },
+    {
+      "id": "skip_platform",
+      "label": "输入 s 跳过当前平台\\n进入下一个平台",
+      "type": "process",
+      "size": "medium"
+    },
+    {
+      "id": "crawl",
+      "label": "开始爬取\\nrun_cpu_crawl.py\\n或 run_cpu_crawl_pw.py --headed",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "slider",
+      "label": "淘宝滑块/验证码?\\n手动完成后自动继续",
+      "type": "decision",
+      "size": "large"
+    },
+    {
+      "id": "headed_note",
+      "label": "需 headed 模式\\n否则无法人工过验",
+      "type": "document",
+      "size": "medium"
+    },
+    {
+      "id": "done",
+      "label": "结束\\n登录态就绪，可重复复用",
+      "type": "terminal",
+      "size": "large"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "from": "start",
+      "to": "prep",
+      "type": "primary"
+    },
+    {
+      "id": "edge-2",
+      "from": "prep",
+      "to": "choose_mode",
+      "type": "primary"
+    },
+    {
+      "id": "edge-3",
+      "from": "choose_mode",
+      "to": "login_all",
+      "type": "primary",
+      "label": "一次性登录全部"
+    },
+    {
+      "id": "edge-4",
+      "from": "choose_mode",
+      "to": "login_one",
+      "type": "primary",
+      "label": "只登录某个平台"
+    },
+    {
+      "id": "edge-5",
+      "from": "choose_mode",
+      "to": "manual_fallback",
+      "type": "optional",
+      "label": "不装 Playwright"
+    },
+    {
+      "id": "edge-6",
+      "from": "login_all",
+      "to": "browser_step",
+      "type": "primary",
+      "label": "依次弹出平台浏览器"
+    },
+    {
+      "id": "edge-7",
+      "from": "login_one",
+      "to": "browser_step",
+      "type": "primary",
+      "label": "打开目标平台"
+    },
+    {
+      "id": "edge-8",
+      "from": "browser_step",
+      "to": "success_detect",
+      "type": "primary",
+      "label": "完成扫码/密码登录"
+    },
+    {
+      "id": "edge-9",
+      "from": "success_detect",
+      "to": "save_state",
+      "type": "primary",
+      "label": "是"
+    },
+    {
+      "id": "edge-10",
+      "from": "success_detect",
+      "to": "timeout",
+      "type": "optional",
+      "label": "否"
+    },
+    {
+      "id": "edge-11",
+      "from": "timeout",
+      "to": "retry_decision",
+      "type": "primary"
+    },
+    {
+      "id": "edge-12",
+      "from": "retry_decision",
+      "to": "browser_step",
+      "type": "primary",
+      "label": "继续等待/重试"
+    },
+    {
+      "id": "edge-13",
+      "from": "retry_decision",
+      "to": "skip_platform",
+      "type": "optional",
+      "label": "跳过"
+    },
+    {
+      "id": "edge-14",
+      "from": "save_state",
+      "to": "crawl",
+      "type": "primary",
+      "label": "登录态已就绪"
+    },
+    {
+      "id": "edge-15",
+      "from": "manual_fallback",
+      "to": "crawl",
+      "type": "data",
+      "label": "手工 Cookie 已写入"
+    },
+    {
+      "id": "edge-16",
+      "from": "skip_platform",
+      "to": "crawl",
+      "type": "optional",
+      "label": "其他平台继续"
+    },
+    {
+      "id": "edge-17",
+      "from": "crawl",
+      "to": "slider",
+      "type": "primary",
+      "label": "运行淘宝时检查"
+    },
+    {
+      "id": "edge-18",
+      "from": "slider",
+      "to": "done",
+      "type": "primary",
+      "label": "否"
+    },
+    {
+      "id": "edge-19",
+      "from": "slider",
+      "to": "headed_note",
+      "type": "optional",
+      "label": "是"
+    },
+    {
+      "id": "edge-20",
+      "from": "headed_note",
+      "to": "done",
+      "type": "primary",
+      "label": "过验后继续"
+    }
+  ],
+  "modules": []
+}

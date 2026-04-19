@@ -1,0 +1,31 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.coverage
+htmlcov/
+
+# 项目数据
+config/config.yaml
+state/
+logs/
+data/
+*.db
+
+# 第三方参考项目（只读 clone）
+vendor/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+.DS_Store
+
+# Codex 插件标记
+.codex
+
+# 历史遗留（开发中跑过的 pdd 登录态）
+state/pdd_*

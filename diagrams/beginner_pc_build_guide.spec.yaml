@@ -1,0 +1,331 @@
+meta:
+  profile: engineering-review
+  source: generated
+  theme: tech-blue
+  layout: horizontal
+  canvas: 3200x1600
+  routing: orthogonal
+  title: 小小白装机引导分支图
+  description: 从确定需求开始，面向新手的办公、学习、开发、设计等装机引导分支。
+nodes:
+  - id: start
+    label: 开始\n小小白装机引导
+    type: terminal
+    size: large
+    position:
+      x: 40
+      'y': 700
+  - id: need
+    label: 确定主要需求
+    type: decision
+    size: large
+    position:
+      x: 260
+      'y': 700
+  - id: office
+    label: 办公\n文档 表格 会议 浏览器
+    type: process
+    size: large
+    position:
+      x: 520
+      'y': 160
+  - id: office_cfg
+    label: 推荐\n6 核 CPU\n16GB 内存\n512GB SSD\n优先核显
+    type: document
+    size: large
+    position:
+      x: 820
+      'y': 160
+  - id: study
+    label: 学习\n网课 论文 轻编程
+    type: process
+    size: large
+    position:
+      x: 520
+      'y': 420
+  - id: study_split
+    label: 是否有专业软件?
+    type: decision
+    size: medium
+    position:
+      x: 820
+      'y': 420
+  - id: study_cfg
+    label: |-
+      推荐
+      普通学习: 16GB + 512GB SSD
+      专业学习: 6~8 核 + 16~32GB
+    type: document
+    size: large
+    position:
+      x: 1080
+      'y': 420
+  - id: dev
+    label: 开发\n前后端 虚拟机 容器
+    type: process
+    size: large
+    position:
+      x: 520
+      'y': 700
+  - id: dev_split
+    label: 是否重负载?
+    type: decision
+    size: medium
+    position:
+      x: 820
+      'y': 700
+  - id: dev_cfg
+    label: |-
+      推荐
+      常规开发: 8 核 + 32GB
+      重负载: 8~12 核 + 32~64GB
+    type: document
+    size: large
+    position:
+      x: 1080
+      'y': 700
+  - id: design
+    label: 设计\nPS AI PR CAD 3D
+    type: process
+    size: large
+    position:
+      x: 520
+      'y': 980
+  - id: design_split
+    label: 是否 3D / 视频?
+    type: decision
+    size: medium
+    position:
+      x: 820
+      'y': 980
+  - id: design_cfg
+    label: |-
+      推荐
+      平面/UI: 32GB + 1TB SSD
+      3D/剪辑: 32~64GB + 中高端独显
+    type: document
+    size: large
+    position:
+      x: 1080
+      'y': 980
+  - id: mixed
+    label: 混合需求\n办公+游戏 / 开发+设计
+    type: process
+    size: large
+    position:
+      x: 520
+      'y': 1240
+  - id: mixed_cfg
+    label: 原则\n按最重负载定配置\n优先补 CPU / 显卡 / 内存短板
+    type: document
+    size: large
+    position:
+      x: 820
+      'y': 1240
+  - id: budget
+    label: 确定总预算
+    type: decision
+    size: large
+    position:
+      x: 1440
+      'y': 700
+  - id: budget_rule
+    label: 预算取舍\n入门先够用\n主流看平衡\n高配留静音和升级空间
+    type: document
+    size: large
+    position:
+      x: 1700
+      'y': 700
+  - id: choose_parts
+    label: 选平台与配件
+    type: process
+    size: large
+    position:
+      x: 1980
+      'y': 700
+  - id: parts_rule
+    label: 清单\nCPU 主板 散热 内存\nSSD 电源 机箱\n按需选显卡和显示器
+    type: document
+    size: large
+    position:
+      x: 2240
+      'y': 560
+  - id: compatibility
+    label: 兼容性通过?
+    type: decision
+    size: medium
+    position:
+      x: 2240
+      'y': 840
+  - id: revise
+    label: 返回调整\n接口 供电 尺寸 散热
+    type: process
+    size: medium
+    position:
+      x: 2480
+      'y': 940
+  - id: assemble
+    label: 开始装机\n先装 CPU / 散热 / 内存\n再上机箱与走线
+    type: process
+    size: large
+    position:
+      x: 2740
+      'y': 700
+  - id: boot
+    label: 一次点亮?
+    type: decision
+    size: medium
+    position:
+      x: 3000
+      'y': 700
+  - id: troubleshoot
+    label: 排障\n查供电 插槽 跳线\n显示输出 内存重插
+    type: process
+    size: medium
+    position:
+      x: 3240
+      'y': 860
+  - id: system
+    label: 安装系统与驱动
+    type: process
+    size: medium
+    position:
+      x: 3240
+      'y': 560
+  - id: verify
+    label: 验收\n温度正常\n硬盘识别\n运行稳定
+    type: process
+    size: medium
+    position:
+      x: 3480
+      'y': 560
+  - id: done
+    label: 完成\n进入使用与后续升级
+    type: terminal
+    size: large
+    position:
+      x: 3720
+      'y': 560
+edges:
+  - from: start
+    to: need
+    type: primary
+  - from: need
+    to: office
+    type: primary
+    label: 办公
+  - from: need
+    to: study
+    type: primary
+    label: 学习
+  - from: need
+    to: dev
+    type: primary
+    label: 开发
+  - from: need
+    to: design
+    type: primary
+    label: 设计
+  - from: need
+    to: mixed
+    type: optional
+    label: 混合需求
+  - from: office
+    to: office_cfg
+    type: primary
+  - from: office_cfg
+    to: budget
+    type: primary
+  - from: study
+    to: study_split
+    type: primary
+  - from: study_split
+    to: study_cfg
+    type: primary
+    label: 否
+  - from: study_split
+    to: study_cfg
+    type: optional
+    label: 是
+  - from: study_cfg
+    to: budget
+    type: primary
+  - from: dev
+    to: dev_split
+    type: primary
+  - from: dev_split
+    to: dev_cfg
+    type: primary
+    label: 否
+  - from: dev_split
+    to: dev_cfg
+    type: optional
+    label: 是
+  - from: dev_cfg
+    to: budget
+    type: primary
+  - from: design
+    to: design_split
+    type: primary
+  - from: design_split
+    to: design_cfg
+    type: primary
+    label: 否
+  - from: design_split
+    to: design_cfg
+    type: optional
+    label: 是
+  - from: design_cfg
+    to: budget
+    type: primary
+  - from: mixed
+    to: mixed_cfg
+    type: primary
+  - from: mixed_cfg
+    to: budget
+    type: primary
+  - from: budget
+    to: budget_rule
+    type: primary
+  - from: budget_rule
+    to: choose_parts
+    type: primary
+  - from: choose_parts
+    to: parts_rule
+    type: primary
+  - from: parts_rule
+    to: compatibility
+    type: primary
+  - from: compatibility
+    to: assemble
+    type: primary
+    label: 是
+  - from: compatibility
+    to: revise
+    type: optional
+    label: 否
+  - from: revise
+    to: choose_parts
+    type: primary
+  - from: assemble
+    to: boot
+    type: primary
+  - from: boot
+    to: system
+    type: primary
+    label: 是
+  - from: boot
+    to: troubleshoot
+    type: optional
+    label: 否
+  - from: troubleshoot
+    to: assemble
+    type: primary
+    label: 修复后重试
+  - from: system
+    to: verify
+    type: primary
+  - from: verify
+    to: done
+    type: primary
+modules: []

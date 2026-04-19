@@ -1,0 +1,407 @@
+{
+  "version": 1,
+  "title": "小小白装机引导分支图",
+  "type": "engineering-diagram",
+  "source": "generated",
+  "profile": "engineering-review",
+  "theme": "tech-blue",
+  "layout": "horizontal",
+  "counts": {
+    "nodes": 27,
+    "edges": 35,
+    "modules": 0
+  },
+  "nodes": [
+    {
+      "id": "start",
+      "label": "开始\\n小小白装机引导",
+      "type": "terminal",
+      "size": "large"
+    },
+    {
+      "id": "need",
+      "label": "确定主要需求",
+      "type": "decision",
+      "size": "large"
+    },
+    {
+      "id": "office",
+      "label": "办公\\n文档 表格 会议 浏览器",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "office_cfg",
+      "label": "推荐\\n6 核 CPU\\n16GB 内存\\n512GB SSD\\n优先核显",
+      "type": "document",
+      "size": "large"
+    },
+    {
+      "id": "study",
+      "label": "学习\\n网课 论文 轻编程",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "study_split",
+      "label": "是否有专业软件?",
+      "type": "decision",
+      "size": "medium"
+    },
+    {
+      "id": "study_cfg",
+      "label": "推荐\n普通学习: 16GB + 512GB SSD\n专业学习: 6~8 核 + 16~32GB",
+      "type": "document",
+      "size": "large"
+    },
+    {
+      "id": "dev",
+      "label": "开发\\n前后端 虚拟机 容器",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "dev_split",
+      "label": "是否重负载?",
+      "type": "decision",
+      "size": "medium"
+    },
+    {
+      "id": "dev_cfg",
+      "label": "推荐\n常规开发: 8 核 + 32GB\n重负载: 8~12 核 + 32~64GB",
+      "type": "document",
+      "size": "large"
+    },
+    {
+      "id": "design",
+      "label": "设计\\nPS AI PR CAD 3D",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "design_split",
+      "label": "是否 3D / 视频?",
+      "type": "decision",
+      "size": "medium"
+    },
+    {
+      "id": "design_cfg",
+      "label": "推荐\n平面/UI: 32GB + 1TB SSD\n3D/剪辑: 32~64GB + 中高端独显",
+      "type": "document",
+      "size": "large"
+    },
+    {
+      "id": "mixed",
+      "label": "混合需求\\n办公+游戏 / 开发+设计",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "mixed_cfg",
+      "label": "原则\\n按最重负载定配置\\n优先补 CPU / 显卡 / 内存短板",
+      "type": "document",
+      "size": "large"
+    },
+    {
+      "id": "budget",
+      "label": "确定总预算",
+      "type": "decision",
+      "size": "large"
+    },
+    {
+      "id": "budget_rule",
+      "label": "预算取舍\\n入门先够用\\n主流看平衡\\n高配留静音和升级空间",
+      "type": "document",
+      "size": "large"
+    },
+    {
+      "id": "choose_parts",
+      "label": "选平台与配件",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "parts_rule",
+      "label": "清单\\nCPU 主板 散热 内存\\nSSD 电源 机箱\\n按需选显卡和显示器",
+      "type": "document",
+      "size": "large"
+    },
+    {
+      "id": "compatibility",
+      "label": "兼容性通过?",
+      "type": "decision",
+      "size": "medium"
+    },
+    {
+      "id": "revise",
+      "label": "返回调整\\n接口 供电 尺寸 散热",
+      "type": "process",
+      "size": "medium"
+    },
+    {
+      "id": "assemble",
+      "label": "开始装机\\n先装 CPU / 散热 / 内存\\n再上机箱与走线",
+      "type": "process",
+      "size": "large"
+    },
+    {
+      "id": "boot",
+      "label": "一次点亮?",
+      "type": "decision",
+      "size": "medium"
+    },
+    {
+      "id": "troubleshoot",
+      "label": "排障\\n查供电 插槽 跳线\\n显示输出 内存重插",
+      "type": "process",
+      "size": "medium"
+    },
+    {
+      "id": "system",
+      "label": "安装系统与驱动",
+      "type": "process",
+      "size": "medium"
+    },
+    {
+      "id": "verify",
+      "label": "验收\\n温度正常\\n硬盘识别\\n运行稳定",
+      "type": "process",
+      "size": "medium"
+    },
+    {
+      "id": "done",
+      "label": "完成\\n进入使用与后续升级",
+      "type": "terminal",
+      "size": "large"
+    }
+  ],
+  "edges": [
+    {
+      "id": "edge-1",
+      "from": "start",
+      "to": "need",
+      "type": "primary"
+    },
+    {
+      "id": "edge-2",
+      "from": "need",
+      "to": "office",
+      "type": "primary",
+      "label": "办公"
+    },
+    {
+      "id": "edge-3",
+      "from": "need",
+      "to": "study",
+      "type": "primary",
+      "label": "学习"
+    },
+    {
+      "id": "edge-4",
+      "from": "need",
+      "to": "dev",
+      "type": "primary",
+      "label": "开发"
+    },
+    {
+      "id": "edge-5",
+      "from": "need",
+      "to": "design",
+      "type": "primary",
+      "label": "设计"
+    },
+    {
+      "id": "edge-6",
+      "from": "need",
+      "to": "mixed",
+      "type": "optional",
+      "label": "混合需求"
+    },
+    {
+      "id": "edge-7",
+      "from": "office",
+      "to": "office_cfg",
+      "type": "primary"
+    },
+    {
+      "id": "edge-8",
+      "from": "office_cfg",
+      "to": "budget",
+      "type": "primary"
+    },
+    {
+      "id": "edge-9",
+      "from": "study",
+      "to": "study_split",
+      "type": "primary"
+    },
+    {
+      "id": "edge-10",
+      "from": "study_split",
+      "to": "study_cfg",
+      "type": "primary",
+      "label": "否"
+    },
+    {
+      "id": "edge-11",
+      "from": "study_split",
+      "to": "study_cfg",
+      "type": "optional",
+      "label": "是"
+    },
+    {
+      "id": "edge-12",
+      "from": "study_cfg",
+      "to": "budget",
+      "type": "primary"
+    },
+    {
+      "id": "edge-13",
+      "from": "dev",
+      "to": "dev_split",
+      "type": "primary"
+    },
+    {
+      "id": "edge-14",
+      "from": "dev_split",
+      "to": "dev_cfg",
+      "type": "primary",
+      "label": "否"
+    },
+    {
+      "id": "edge-15",
+      "from": "dev_split",
+      "to": "dev_cfg",
+      "type": "optional",
+      "label": "是"
+    },
+    {
+      "id": "edge-16",
+      "from": "dev_cfg",
+      "to": "budget",
+      "type": "primary"
+    },
+    {
+      "id": "edge-17",
+      "from": "design",
+      "to": "design_split",
+      "type": "primary"
+    },
+    {
+      "id": "edge-18",
+      "from": "design_split",
+      "to": "design_cfg",
+      "type": "primary",
+      "label": "否"
+    },
+    {
+      "id": "edge-19",
+      "from": "design_split",
+      "to": "design_cfg",
+      "type": "optional",
+      "label": "是"
+    },
+    {
+      "id": "edge-20",
+      "from": "design_cfg",
+      "to": "budget",
+      "type": "primary"
+    },
+    {
+      "id": "edge-21",
+      "from": "mixed",
+      "to": "mixed_cfg",
+      "type": "primary"
+    },
+    {
+      "id": "edge-22",
+      "from": "mixed_cfg",
+      "to": "budget",
+      "type": "primary"
+    },
+    {
+      "id": "edge-23",
+      "from": "budget",
+      "to": "budget_rule",
+      "type": "primary"
+    },
+    {
+      "id": "edge-24",
+      "from": "budget_rule",
+      "to": "choose_parts",
+      "type": "primary"
+    },
+    {
+      "id": "edge-25",
+      "from": "choose_parts",
+      "to": "parts_rule",
+      "type": "primary"
+    },
+    {
+      "id": "edge-26",
+      "from": "parts_rule",
+      "to": "compatibility",
+      "type": "primary"
+    },
+    {
+      "id": "edge-27",
+      "from": "compatibility",
+      "to": "assemble",
+      "type": "primary",
+      "label": "是"
+    },
+    {
+      "id": "edge-28",
+      "from": "compatibility",
+      "to": "revise",
+      "type": "optional",
+      "label": "否"
+    },
+    {
+      "id": "edge-29",
+      "from": "revise",
+      "to": "choose_parts",
+      "type": "primary"
+    },
+    {
+      "id": "edge-30",
+      "from": "assemble",
+      "to": "boot",
+      "type": "primary"
+    },
+    {
+      "id": "edge-31",
+      "from": "boot",
+      "to": "system",
+      "type": "primary",
+      "label": "是"
+    },
+    {
+      "id": "edge-32",
+      "from": "boot",
+      "to": "troubleshoot",
+      "type": "optional",
+      "label": "否"
+    },
+    {
+      "id": "edge-33",
+      "from": "troubleshoot",
+      "to": "assemble",
+      "type": "primary",
+      "label": "修复后重试"
+    },
+    {
+      "id": "edge-34",
+      "from": "system",
+      "to": "verify",
+      "type": "primary"
+    },
+    {
+      "id": "edge-35",
+      "from": "verify",
+      "to": "done",
+      "type": "primary"
+    }
+  ],
+  "modules": []
+}
