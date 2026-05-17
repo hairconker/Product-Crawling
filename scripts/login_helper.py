@@ -138,7 +138,7 @@ def wait_for_login(
     return False
 
 
-def do_login(key: str) -> bool:
+def do_login(key: str, state_suffix: str = "") -> bool:
     cfg = PLATFORMS[key]
     print(f"\n===== 登录 {cfg['name']} ({key}) =====")
     with sync_playwright() as p:
@@ -165,8 +165,9 @@ def do_login(key: str) -> bool:
         except Exception as e:
             print(f"[{key}] post_login_url 异常: {e}，继续保存")
 
-        # 保存 storage_state
-        state_path = STATE_DIR / f"{key}_state.json"
+        # 保存 storage_state(--state-suffix 影响文件名,空 suffix 走原命名)
+        _sfx = f"_{state_suffix}" if state_suffix else ""
+        state_path = STATE_DIR / f"{key}_state{_sfx}.json"
         context.storage_state(path=str(state_path))
         print(f"[{key}] storage_state 已保存: {state_path}")
 
@@ -177,7 +178,7 @@ def do_login(key: str) -> bool:
             if any(d in (c.get("domain") or "") for d in cfg["cookie_domain_filter"])
         ]
         cookie_line = "; ".join(f"{c['name']}={c['value']}" for c in filtered)
-        cookie_path = STATE_DIR / f"{key}_cookie.txt"
+        cookie_path = STATE_DIR / f"{key}_cookie{_sfx}.txt"
         cookie_path.write_text(cookie_line, encoding="utf-8")
         print(f"[{key}] cookie.txt 已保存（{len(filtered)} 条 cookie）: {cookie_path}")
 
@@ -192,13 +193,18 @@ def main() -> int:
         choices=list(PLATFORMS.keys()) + ["all"],
         help="要登录的平台",
     )
+    parser.add_argument(
+        "--state-suffix", metavar="SUFFIX", default="",
+        help="多账号场景:给保存的 state/cookie 文件名加后缀,如 --state-suffix B 会"
+             "存到 state/xianyu_state_B.json,跟主账号(空 suffix)完全隔离。",
+    )
     args = parser.parse_args()
 
     targets = list(PLATFORMS.keys()) if args.platform == "all" else [args.platform]
     results: dict[str, bool] = {}
     for key in targets:
         try:
-            results[key] = do_login(key)
+            results[key] = do_login(key, state_suffix=args.state_suffix)
         except KeyboardInterrupt:
             print(f"\n[{key}] 用户中断")
             results[key] = False
