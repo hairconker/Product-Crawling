@@ -1,0 +1,125 @@
+华硕 TUF Gaming H610M DDR4
+微星 Mortar H610M DDR4
+技嘉 Aorus Elite H610M DDR4
+华擎 Steel Legend H610M DDR4
+七彩虹 CVN Gaming H610M DDR4
+华硕 TUF Gaming B660M DDR4
+微星 Mortar B660M DDR4
+技嘉 Aorus Elite B660M DDR4
+华擎 Steel Legend B660M DDR4
+七彩虹 CVN Gaming B660M DDR4
+华硕 TUF Gaming B760M DDR4
+微星 Mortar B760M DDR4
+技嘉 Aorus Elite B760M DDR4
+华擎 Steel Legend B760M DDR4
+七彩虹 CVN Gaming B760M DDR4
+华硕 TUF Gaming B760M DDR5
+微星 Mortar B760M DDR5
+技嘉 Aorus Elite B760M DDR5
+华擎 Steel Legend B760M DDR5
+七彩虹 CVN Gaming B760M DDR5
+华硕 TUF Gaming B760M WiFi DDR5
+微星 Mortar B760M WiFi DDR5
+技嘉 Aorus Elite B760M WiFi DDR5
+华擎 Steel Legend B760M WiFi DDR5
+七彩虹 CVN Gaming B760M WiFi DDR5
+华硕 TUF Gaming Z790 DDR5
+微星 Mortar Z790 DDR5
+技嘉 Aorus Elite Z790 DDR5
+华擎 Steel Legend Z790 DDR5
+七彩虹 CVN Gaming Z790 DDR5
+华硕 TUF Gaming Z790 WiFi DDR5
+微星 Mortar Z790 WiFi DDR5
+技嘉 Aorus Elite Z790 WiFi DDR5
+华擎 Steel Legend Z790 WiFi DDR5
+七彩虹 CVN Gaming Z790 WiFi DDR5
+华硕 TUF Gaming Z890 WiFi DDR5
+微星 Mortar Z890 WiFi DDR5
+技嘉 Aorus Elite Z890 WiFi DDR5
+华擎 Steel Legend Z890 WiFi DDR5
+七彩虹 CVN Gaming Z890 WiFi DDR5
+华硕 TUF Gaming B860M WiFi DDR5
+微星 Mortar B860M WiFi DDR5
+技嘉 Aorus Elite B860M WiFi DDR5
+华擎 Steel Legend B860M WiFi DDR5
+七彩虹 CVN Gaming B860M WiFi DDR5
+华硕 TUF Gaming H810M DDR5
+微星 Mortar H810M DDR5
+技嘉 Aorus Elite H810M DDR5
+华擎 Steel Legend H810M DDR5
+七彩虹 CVN Gaming H810M DDR5
+华硕 TUF Gaming A520M
+微星 Mortar A520M
+技嘉 Aorus Elite A520M
+华擎 Steel Legend A520M
+七彩虹 CVN Gaming A520M
+华硕 TUF Gaming B450M
+微星 Mortar B450M
+技嘉 Aorus Elite B450M
+华擎 Steel Legend B450M
+七彩虹 CVN Gaming B450M
+华硕 TUF Gaming B550M
+微星 Mortar B550M
+技嘉 Aorus Elite B550M
+华擎 Steel Legend B550M
+七彩虹 CVN Gaming B550M
+华硕 TUF Gaming B550M WiFi
+微星 Mortar B550M WiFi
+技嘉 Aorus Elite B550M WiFi
+华擎 Steel Legend B550M WiFi
+七彩虹 CVN Gaming B550M WiFi
+华硕 TUF Gaming X570S
+微星 Mortar X570S
+技嘉 Aorus Elite X570S
+华擎 Steel Legend X570S
+七彩虹 CVN Gaming X570S
+华硕 TUF Gaming A620M DDR5
+微星 Mortar A620M DDR5
+技嘉 Aorus Elite A620M DDR5
+华擎 Steel Legend A620M DDR5
+七彩虹 CVN Gaming A620M DDR5
+华硕 TUF Gaming A620M WiFi DDR5
+微星 Mortar A620M WiFi DDR5
+技嘉 Aorus Elite A620M WiFi DDR5
+华擎 Steel Legend A620M WiFi DDR5
+七彩虹 CVN Gaming A620M WiFi DDR5
+华硕 TUF Gaming B650M DDR5
+微星 Mortar B650M DDR5
+技嘉 Aorus Elite B650M DDR5
+华擎 Steel Legend B650M DDR5
+七彩虹 CVN Gaming B650M DDR5
+华硕 TUF Gaming B650M WiFi DDR5
+微星 Mortar B650M WiFi DDR5
+技嘉 Aorus Elite B650M WiFi DDR5
+华擎 Steel Legend B650M WiFi DDR5
+七彩虹 CVN Gaming B650M WiFi DDR5
+华硕 TUF Gaming B650E WiFi DDR5
+微星 Mortar B650E WiFi DDR5
+技嘉 Aorus Elite B650E WiFi DDR5
+华擎 Steel Legend B650E WiFi DDR5
+七彩虹 CVN Gaming B650E WiFi DDR5
+华硕 TUF Gaming X670 WiFi DDR5
+微星 Mortar X670 WiFi DDR5
+技嘉 Aorus Elite X670 WiFi DDR5
+华擎 Steel Legend X670 WiFi DDR5
+七彩虹 CVN Gaming X670 WiFi DDR5
+华硕 TUF Gaming X670E WiFi DDR5
+微星 Mortar X670E WiFi DDR5
+技嘉 Aorus Elite X670E WiFi DDR5
+华擎 Steel Legend X670E WiFi DDR5
+七彩虹 CVN Gaming X670E WiFi DDR5
+华硕 TUF Gaming B850M WiFi DDR5
+微星 Mortar B850M WiFi DDR5
+技嘉 Aorus Elite B850M WiFi DDR5
+华擎 Steel Legend B850M WiFi DDR5
+七彩虹 CVN Gaming B850M WiFi DDR5
+华硕 TUF Gaming X870 WiFi DDR5
+微星 Mortar X870 WiFi DDR5
+技嘉 Aorus Elite X870 WiFi DDR5
+华擎 Steel Legend X870 WiFi DDR5
+七彩虹 CVN Gaming X870 WiFi DDR5
+华硕 TUF Gaming X870E WiFi DDR5
+微星 Mortar X870E WiFi DDR5
+技嘉 Aorus Elite X870E WiFi DDR5
+华擎 Steel Legend X870E WiFi DDR5
+七彩虹 CVN Gaming X870E WiFi DDR5

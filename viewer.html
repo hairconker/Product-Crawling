@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>爬取结果查看器 · Product Crawling Viewer</title>
+<title>爬取结果查看器 · CSV / JSON</title>
 <style>
     * { box-sizing: border-box; }
     body {
@@ -163,8 +163,8 @@
 
 <header>
     <h1>🕷 爬取结果查看器</h1>
-    <label class="btn" for="fileInput">📁 加载 JSON 报告</label>
-    <input type="file" id="fileInput" accept=".json">
+    <label class="btn" for="fileInput">📁 加载 CSV / JSON 报告</label>
+    <input type="file" id="fileInput" accept=".csv,.json">
     <button id="exportCsv">📊 导出 CSV</button>
     <span class="summary" id="summary"></span>
 </header>
@@ -173,8 +173,9 @@
 
 <template id="dropTpl">
     <div class="drop-zone" id="dropZone">
-        <p style="font-size: 16px; margin: 0 0 8px;">拖拽 <code>logs/report_pw_*.json</code> 到此处</p>
-        <p style="margin: 0;">或点击上方"加载 JSON 报告"按钮</p>
+        <p style="font-size: 16px; margin: 0 0 8px;">拖拽 <code>logs/report_pw_*_products.csv</code>（或 .json）到此处</p>
+        <p style="margin: 0;">或点击上方"加载 CSV / JSON 报告"按钮</p>
+        <p style="margin: 12px 0 0; font-size: 12px; color: #999;">支持：products.csv（推荐 Excel 友好）/ 旧 JSON 格式</p>
     </div>
 </template>
 
@@ -219,24 +220,116 @@ function renderDropZone() {
 function loadFile(file) {
     const reader = new FileReader();
     reader.onload = (e) => {
+        const text = e.target.result;
+        const isCSV = file.name.toLowerCase().endsWith('.csv') || /^[\uFEFF]?\w+,\w+/.test(text);
         try {
-            REPORT = JSON.parse(e.target.result);
-            // 兼容单关键词旧格式（{keyword, results: {platform: ...}}）
-            if (REPORT.keyword && !REPORT.keywords) {
-                REPORT = {
-                    keywords: [REPORT.keyword],
-                    platforms: Object.keys(REPORT.results || {}),
-                    crawled_at: REPORT.crawled_at,
-                    results: { [REPORT.keyword]: REPORT.results || {} },
-                };
-            }
+            REPORT = isCSV ? parseCsvReport(text) : parseJsonReport(text);
             initView();
         } catch (err) {
-            alert('JSON 解析失败: ' + err.message);
+            alert((isCSV ? 'CSV' : 'JSON') + ' 解析失败: ' + err.message);
             console.error(err);
         }
     };
     reader.readAsText(file);
+}
+
+function parseJsonReport(text) {
+    let r = JSON.parse(text);
+    // 兼容单关键词旧格式（{keyword, results: {platform: ...}}）
+    if (r.keyword && !r.keywords) {
+        r = {
+            keywords: [r.keyword],
+            platforms: Object.keys(r.results || {}),
+            crawled_at: r.crawled_at,
+            results: { [r.keyword]: r.results || {} },
+        };
+    }
+    return r;
+}
+
+// 简单 RFC 4180 CSV parser，支持引号包裹、""转义、字段内换行
+function parseCsv(text) {
+    if (text.charCodeAt(0) === 0xFEFF) text = text.slice(1);  // 去 BOM
+    const rows = [];
+    let row = [];
+    let field = '';
+    let inQuotes = false;
+    let i = 0;
+    const n = text.length;
+    while (i < n) {
+        const c = text[i];
+        if (inQuotes) {
+            if (c === '"') {
+                if (text[i + 1] === '"') { field += '"'; i += 2; }
+                else { inQuotes = false; i += 1; }
+            } else { field += c; i += 1; }
+        } else {
+            if (c === '"') { inQuotes = true; i += 1; }
+            else if (c === ',') { row.push(field); field = ''; i += 1; }
+            else if (c === '\n' || c === '\r') {
+                row.push(field); field = ''; rows.push(row); row = [];
+                if (c === '\r' && text[i + 1] === '\n') i += 2; else i += 1;
+            } else { field += c; i += 1; }
+        }
+    }
+    if (field || row.length) { row.push(field); rows.push(row); }
+    return rows.filter(r => r.length && r.some(v => v !== ''));
+}
+
+function parseCsvReport(text) {
+    const rows = parseCsv(text);
+    if (rows.length < 2) throw new Error('CSV 行数不足（无 header 或无数据）');
+    const header = rows[0];
+    const idx = {};
+    header.forEach((h, i) => { idx[h.trim()] = i; });
+
+    const required = ['keyword', 'platform'];
+    for (const k of required) {
+        if (!(k in idx)) throw new Error(`CSV header 缺少必要列: ${k}（请使用 _products.csv）`);
+    }
+
+    const get = (row, k) => (idx[k] != null && row[idx[k]] != null) ? row[idx[k]] : '';
+    const numOrNull = (s) => {
+        if (s === '' || s == null) return null;
+        const v = parseFloat(s);
+        return isNaN(v) ? null : v;
+    };
+
+    const results = {};
+    const keywords = [];
+    const platforms = [];
+    const kwSet = new Set();
+    const pfSet = new Set();
+    let crawledAt = '';
+
+    for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        const kw = get(row, 'keyword');
+        const pf = get(row, 'platform');
+        if (!kw || !pf) continue;
+        if (!kwSet.has(kw)) { kwSet.add(kw); keywords.push(kw); }
+        if (!pfSet.has(pf)) { pfSet.add(pf); platforms.push(pf); }
+        if (!results[kw]) results[kw] = {};
+        if (!results[kw][pf]) {
+            results[kw][pf] = { success: true, count: 0, error: null, error_type: null, products: [] };
+        }
+        results[kw][pf].products.push({
+            item_id: get(row, 'item_id'),
+            title: get(row, 'title'),
+            current_price: numOrNull(get(row, 'current_price')),
+            origin_price: numOrNull(get(row, 'origin_price')),
+            shop_name: get(row, 'shop_name') || null,
+            location: get(row, 'location') || null,
+            url: get(row, 'url'),
+            image_url: get(row, 'image_url') || null,
+            is_second_hand: ['true', '1', 'y', 'yes'].includes(String(get(row, 'is_second_hand')).toLowerCase()),
+        });
+        results[kw][pf].count++;
+        if (!crawledAt) crawledAt = get(row, 'crawled_at');
+    }
+
+    if (!keywords.length) throw new Error('CSV 数据行解析为空（关键词列空？）');
+    return { keywords, platforms, crawled_at: crawledAt || '-', results };
 }
 
 // ---------------------- 初始化视图 ----------------------

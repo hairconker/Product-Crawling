@@ -1,0 +1,46 @@
+# 阶段 13：Linux/WSL cron 模板
+#
+# 使用：
+#   crontab -e  → 粘入（按需改路径）
+#
+# 字段：分 时 日 月 周 命令
+# 注意事项：
+#   - WSL 不建议跑 JD 爬取（CLAUDE.md 已锁机房 IP 红线），加 --skip-jd
+#   - 无头模式必须，Playwright 需装 chromium
+#   - 日志落 logs/weekly_{YYYY-Www}.log + cron.log 双写
+
+PROJECT=/mnt/e/autoPCBulid
+PY=/usr/bin/python3
+LOG=$PROJECT/logs/cron.log
+
+# 每周一 03:00 跑字典 + 热门品类价格（跳过 JD 国行补充）
+0 3 * * 1  cd $PROJECT && $PY scripts/weekly_run.py --skip-jd --resume >> $LOG 2>&1
+
+# 每周日 04:00 归档老周数据（滚动保留 12 周）
+0 4 * * 0  cd $PROJECT && $PY scripts/archive.py --keep-weeks 12 >> $LOG 2>&1
+
+# systemd timer 等价示例（可选，放 ~/.config/systemd/user/ 下）
+#
+# ~/.config/systemd/user/autoPCBulid-weekly.service：
+#   [Unit]
+#   Description=autoPCBulid weekly dict+price
+#
+#   [Service]
+#   Type=oneshot
+#   WorkingDirectory=/mnt/e/autoPCBulid
+#   ExecStart=/usr/bin/python3 /mnt/e/autoPCBulid/scripts/weekly_run.py --skip-jd --resume
+#   StandardOutput=append:/mnt/e/autoPCBulid/logs/systemd.log
+#   StandardError=append:/mnt/e/autoPCBulid/logs/systemd.log
+#
+# ~/.config/systemd/user/autoPCBulid-weekly.timer：
+#   [Unit]
+#   Description=Weekly run every Monday 03:00
+#
+#   [Timer]
+#   OnCalendar=Mon *-*-* 03:00:00
+#   Persistent=true
+#
+#   [Install]
+#   WantedBy=timers.target
+#
+# 启用：systemctl --user enable --now autoPCBulid-weekly.timer

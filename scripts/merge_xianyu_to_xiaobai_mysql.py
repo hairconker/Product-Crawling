@@ -21,6 +21,7 @@ from __future__ import annotations
 
 import argparse
 import logging
+import os
 import re
 import sqlite3
 import statistics
@@ -33,10 +34,36 @@ ROOT = Path(__file__).resolve().parent.parent
 SQLITE_DB = ROOT / "data" / "prices.db"
 MYSQL_BIN = Path("C:/Program Files/MySQL/MySQL Server 8.0/bin/mysql.exe")
 XIAOBAI_DB = "xiao_bai_zhuang_ji_zhu_shou"
-DEFAULT_MYSQL_PWD = "123456"
+DEFAULT_MYSQL_PWD = os.environ.get("XIAOBAI_MYSQL_PASSWORD")
 
 # autoPCBulid SQLite t_hardware.category(大写) → XiaoBai MySQL t_hardware.category(小写)
 # XiaoBai 没有 hdd / nic_wired / nic_wireless 这几个类,这些不参与匹配
+_KEYWORD_BLACKLIST: set[str] = {
+    "am3", "am3 am3", "am3+", "am3+ am3",
+    "lga2011-3", "2 x lga2011-3", "2 x lga2011-3 narrow",
+    "lga1155", "lga1151", "lga1200",
+    "ddr4", "ddr5", "ddr3",
+}
+_PSU_SPEC_RE = re.compile(
+    r"^\d+w\s+(none|bronze|gold|platinum|plus|silver|titanium)\s*$", re.IGNORECASE
+)
+_DDR_SPEC_RE = re.compile(r"^ddr[3-5]-\d+-\d+gb\s*$", re.IGNORECASE)
+
+
+def _is_blacklisted(kw: str) -> bool:
+    low = kw.lower().strip()
+    if low in _KEYWORD_BLACKLIST:
+        return True
+    if _PSU_SPEC_RE.match(low):
+        return True
+    if _DDR_SPEC_RE.match(low):
+        return True
+    return False
+
+
+_GPU_VENDOR_PREFIXES = {"geforce", "radeon"}
+
+
 _CAT_MAP: dict[str, str] = {
     "cpu": "cpu",
     "gpu": "gpu",
@@ -72,7 +99,7 @@ def fetch_mysql_hardware(pwd: str) -> list[dict[str, str | int]]:
         "-D", XIAOBAI_DB,
         "-e",
         "SELECT id, category, COALESCE(brand,''), COALESCE(model,'') "
-        "FROM t_hardware WHERE status=1 AND deleted=0;",
+        "FROM t_hardware WHERE deleted=0;",
     ]
     try:
         result = subprocess.run(
@@ -105,11 +132,26 @@ def fetch_mysql_hardware(pwd: str) -> list[dict[str, str | int]]:
 
 
 _TOKEN_SPLIT_RE = re.compile(r"[\s_\-/()]+")
+# R5/R7/R9 → Ryzen 5/7/9(后允许空格/结尾/数字,覆盖 R5 5700X 这种)
+_RYZEN_SHORT_RE = re.compile(r"\bR([579])(?=\s|$)", re.IGNORECASE)
+# i3-/i5-/i7-/i9- 加 Core 前缀(MySQL 的 model 是 'Core i5-12400F')
+_INTEL_CORE_SHORT_RE = re.compile(r"\b(i[3579]-)", re.IGNORECASE)
+
+
+def _normalize_keyword(s: str) -> str:
+    """归一化 keyword 的常见别名,提升匹配率。
+
+    R5/R7/R9 → Ryzen 5/7/9
+    i3-/i5-/i7-/i9- → Core i3-/i5-/i7-/i9-(MySQL 那边 model 带 Core 前缀)
+    """
+    s = _RYZEN_SHORT_RE.sub(r"Ryzen \1", s)
+    s = _INTEL_CORE_SHORT_RE.sub(r"Core \1", s)
+    return s
 
 
 def _tokenize(s: str) -> list[str]:
-    """切 token + 小写。"""
-    return [t.lower() for t in _TOKEN_SPLIT_RE.split(s) if t]
+    """切 token + 小写,带别名归一化。"""
+    return [t.lower() for t in _TOKEN_SPLIT_RE.split(_normalize_keyword(s)) if t]
 
 
 def build_index(hw_rows: list[dict[str, str | int]]) -> dict[str, list[dict]]:
@@ -179,17 +221,20 @@ def match_hardware(
     best_score: float = 0.0
     best_id: int | None = None
     for cat in candidate_cats:
+        is_gpu = (cat == "gpu")
         for h in grouped.get(cat, []):
             brand_t = h["brand_tokens"]
-            model_t = h["model_tokens"]
+            model_t_raw = h["model_tokens"]
+            # GPU 类弱化 geforce/radeon 前缀
+            if is_gpu:
+                model_t = [t for t in model_t_raw if t not in _GPU_VENDOR_PREFIXES]
+            else:
+                model_t = model_t_raw
             if not model_t:
                 continue
-            # model 所有 token 必须在 keyword(严格)
             if not all(t in kw_tokens for t in model_t):
                 continue
-            # 基础分 = model token 数(model 越长越具体)
             score: float = float(len(model_t))
-            # brand 在 keyword 加 0.5(优先 brand 也对的)
             if brand_t and all(t in kw_tokens for t in brand_t):
                 score += 0.5
             if score > best_score:
@@ -231,19 +276,27 @@ def filter_by_title(
     items: list[tuple[float, str]],
     model_tokens: list[str],
 ) -> list[float]:
-    """只保留 title 包含 model 关键 token 的商品价(跟 csv 版同算法)。
-
-    规则:title token 必须包含 model_tokens 至少 ⌈len/2⌉ 个;model 仅 1 token 时必须出现。
-    """
+    """跟 csv 版同算法:连字符 sub-token 拆分,提升 i5-13490F 这种命中率。"""
     if not model_tokens:
         return [p for p, _ in items]
+    expanded: list[list[str]] = []
+    for t in model_tokens:
+        subs = [s for s in re.split(r"[-_/]+", t) if s]
+        expanded.append(subs)
     required = max(1, (len(model_tokens) + 1) // 2)
     out: list[float] = []
     for price, title in items:
         if not title:
             continue
         title_tokens = set(_tokenize(title))
-        hit = sum(1 for t in model_tokens if t in title_tokens)
+        for tt in list(title_tokens):
+            for s in re.split(r"[-_/]+", tt):
+                if s:
+                    title_tokens.add(s)
+        hit = sum(
+            1 for subs in expanded
+            if subs and all(s in title_tokens for s in subs)
+        )
         if hit >= required:
             out.append(price)
     return out
@@ -331,7 +384,11 @@ def run(pwd: str, *, dry_run: bool, out_sql: Path) -> int:
     matched: list[tuple[int, str, float, int]] = []
     unmatched: list[str] = []
     rejected_by_title = 0
+    blacklisted = 0
     for kw, items in items_per_kw.items():
+        if _is_blacklisted(kw):
+            blacklisted += 1
+            continue
         hid = match_hardware(kw, grouped)
         if hid is None:
             unmatched.append(kw)
@@ -411,7 +468,11 @@ def run(pwd: str, *, dry_run: bool, out_sql: Path) -> int:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--password", default=DEFAULT_MYSQL_PWD)
+    parser.add_argument(
+        "--password",
+        default=DEFAULT_MYSQL_PWD,
+        help="MySQL 密码；也可用环境变量 XIAOBAI_MYSQL_PASSWORD",
+    )
     parser.add_argument("--dry-run", action="store_true")
     parser.add_argument(
         "--out", type=Path,
@@ -420,6 +481,8 @@ def main() -> int:
     args = parser.parse_args()
 
     _configure_logging()
+    if args.password is None:
+        parser.error("缺少 MySQL 密码：请传 --password 或设置 XIAOBAI_MYSQL_PASSWORD")
     return run(args.password, dry_run=args.dry_run, out_sql=args.out)
 
 

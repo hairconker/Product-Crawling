@@ -1,0 +1,62 @@
+# 京东分类页 cat 参数（三级 ID）
+#
+# 获取方式：
+#   1. Windows 浏览器打开 https://www.jd.com
+#   2. 鼠标悬停导航栏"电脑办公"→"电脑整机"→ 目标三级品类
+#   3. 点进去后 URL 里 `cat=xxx,yyy,zzz` 就是填这里的值
+#
+# 品类 slug 必须与阶段 9（core/dict/categories.py::PROJECT_CATEGORIES）一致。
+# 2026-04-20 初版（阶段 10）：多数为占位值，首次 Windows 家宽运行时需要人工确认。
+# ev 值（品牌过滤参数）由 spiders/dict_jd_category.py 运行时从分类页 DOM 自动发现，无需手填。
+
+categories:
+  gpu:
+    cat: "670,677,11248"          # 电脑办公 → 电脑整机 → 显卡（待 Windows 验证）
+    jd_cn_name: "显卡"
+    verified: false
+  cpu:
+    cat: "670,677,686"            # → CPU
+    jd_cn_name: "CPU"
+    verified: false
+  mb:
+    cat: "670,677,681"            # → 主板
+    jd_cn_name: "主板"
+    verified: false
+  ram:
+    cat: "670,677,691"            # → 内存
+    jd_cn_name: "内存"
+    verified: false
+  storage_ssd:
+    cat: "670,728,728"            # → SSD 固态硬盘（京东可能独立在存储类目）
+    jd_cn_name: "固态硬盘"
+    verified: false
+  storage_hdd:
+    cat: "670,729,729"            # → HDD 机械硬盘
+    jd_cn_name: "机械硬盘"
+    verified: false
+  psu:
+    cat: "670,677,687"            # → 电源
+    jd_cn_name: "电源"
+    verified: false
+  case:
+    cat: "670,677,684"            # → 机箱
+    jd_cn_name: "机箱"
+    verified: false
+  cooler:
+    cat: "670,677,683"            # → 散热器
+    jd_cn_name: "散热器"
+    verified: false
+  nic_wired:
+    cat: ""                       # 京东可能没有独立三级品类，待调研
+    jd_cn_name: "有线网卡"
+    verified: false
+  nic_wireless:
+    cat: ""                       # 同上
+    jd_cn_name: "无线网卡"
+    verified: false
+
+# 全局参数（可在 CLI --max-pages / --min-brand-items 覆盖）
+defaults:
+  max_pages: 100                  # 单品牌最多翻页，遇"无商品"或"连续 2 页重复率>95%"提前终止
+  min_brand_items: 5              # 抓到条数少于此值的品牌标记为 "probably_missing"（不输出错误，仅 WARN）
+  # 节流常量不在此处定义，统一在 run_cpu_crawl_pw.py 顶部

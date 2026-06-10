@@ -1,0 +1,366 @@
+# 硬盘型号 → 发布年 + 档位映射表
+#
+# 匹配逻辑（见 parse_model.drives_release_year）：
+#   - 对 SKU 名称做 case-insensitive 子串匹配
+#   - 同品牌下按列表顺序尝试；**长/具体型号放前面**（如 "990 Evo Plus" 必须在 "990" 前）
+#   - 首次命中即返回，不做评分
+#
+# 数据来源：
+#   - Samsung/WD/Crucial/Kingston 等一线品牌官网产品页 + press release
+#   - 致态（YMTC）/ 海康 / 铠侠 官网
+#   - Wikipedia SSD history 交叉校对
+#
+# tier 档位约定（用于后续 tier_whitelist 联动）：
+#   - high:  高端/旗舰（PCIe 4.0/5.0 顶级 / 高 TBW / DRAM 缓存全满）
+#   - mid:   主流（PCIe 3.0/4.0 中端）
+#   - entry: 入门（QLC / DRAMless / SATA 预算线）
+#
+# HDD 覆盖较稀：产品线通常持续多年（BarraCuda/Blue 等 2013 首代至今），按主系列首发年记。
+
+# ---------- SSD · Samsung ----------
+samsung:
+  - { match: "9100 Pro",          release_year: 2025, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "990 Evo Plus",      release_year: 2024, tier: mid,   form: "M.2 PCIe 4.0/5.0" }
+  - { match: "990 Evo",           release_year: 2024, tier: mid,   form: "M.2 PCIe 4.0/5.0" }
+  - { match: "990 Pro",           release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "980 Pro",           release_year: 2020, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "980",               release_year: 2021, tier: mid,   form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "970 Evo Plus",      release_year: 2019, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "970 Evo",           release_year: 2018, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "970 Pro",           release_year: 2018, tier: high,  form: "M.2 PCIe 3.0" }
+  - { match: "960 Pro",           release_year: 2016, tier: high,  form: "M.2 PCIe 3.0" }
+  - { match: "960 Evo",           release_year: 2016, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "950 Pro",           release_year: 2015, tier: high,  form: "M.2 PCIe 3.0" }
+  - { match: "870 Evo",           release_year: 2021, tier: mid,   form: "SATA" }
+  - { match: "870 QVO",           release_year: 2020, tier: entry, form: "SATA QLC" }
+  - { match: "860 Pro",           release_year: 2018, tier: high,  form: "SATA" }
+  - { match: "860 Evo",           release_year: 2018, tier: mid,   form: "SATA" }
+  - { match: "860 QVO",           release_year: 2018, tier: entry, form: "SATA QLC" }
+  - { match: "850 Pro",           release_year: 2014, tier: high,  form: "SATA" }
+  - { match: "850 Evo",           release_year: 2014, tier: mid,   form: "SATA" }
+  - { match: "840 Evo",           release_year: 2013, tier: mid,   form: "SATA" }
+  - { match: "840 Pro",           release_year: 2012, tier: high,  form: "SATA" }
+  - { match: "830",               release_year: 2011, tier: high,  form: "SATA" }
+
+# ---------- SSD · Western Digital / SanDisk ----------
+# WD 型号名（SN850X / SN770 / SN580 等）全球唯一，**不带品牌前缀**匹配即可
+# 避免"WD vs Western Digital"双写
+western_digital:
+  - { match: "SN850X",            release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "SN850",             release_year: 2020, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "SN770",             release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "SN750",             release_year: 2019, tier: high,  form: "M.2 PCIe 3.0" }
+  - { match: "SN580",             release_year: 2023, tier: mid,   form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "SN570",             release_year: 2021, tier: mid,   form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "SN550",             release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "SN700",             release_year: 2021, tier: high,  form: "M.2 PCIe 3.0 NAS" }
+  - { match: "Blue 3D NAND",      release_year: 2018, tier: mid,   form: "SATA" }
+
+# ---------- SSD · Crucial / Micron ----------
+crucial:
+  - { match: "T705",              release_year: 2024, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "T700",              release_year: 2023, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "T500",              release_year: 2023, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "P5 Plus",           release_year: 2021, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "P3 Plus",           release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "P3",                release_year: 2022, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "P5",                release_year: 2020, tier: high,  form: "M.2 PCIe 3.0" }
+  - { match: "P2",                release_year: 2020, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "P1",                release_year: 2018, tier: entry, form: "M.2 PCIe 3.0 QLC" }
+  - { match: "MX500",             release_year: 2018, tier: mid,   form: "SATA" }
+  - { match: "BX500",             release_year: 2018, tier: entry, form: "SATA" }
+  - { match: "MX300",             release_year: 2016, tier: mid,   form: "SATA" }
+  - { match: "MX200",             release_year: 2015, tier: mid,   form: "SATA" }
+  - { match: "MX100",             release_year: 2014, tier: mid,   form: "SATA" }
+  - { match: "M4",                release_year: 2011, tier: mid,   form: "SATA" }
+  - { match: "M500",              release_year: 2013, tier: mid,   form: "SATA" }
+  - { match: "M550",              release_year: 2014, tier: mid,   form: "SATA" }
+
+# ---------- SSD · Kingston ----------
+kingston:
+  - { match: "Fury Renegade",     release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "KC3000",            release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "NV3",               release_year: 2024, tier: entry, form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "NV2",               release_year: 2022, tier: entry, form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "NV1",               release_year: 2021, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "KC2500",            release_year: 2020, tier: high,  form: "M.2 PCIe 3.0" }
+  - { match: "A2000",             release_year: 2019, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "A400",              release_year: 2017, tier: entry, form: "SATA" }
+
+# ---------- SSD · 致态 / YMTC Zhitai / Ztc ----------
+zhitai:
+  - { match: "TiPro 9000",        release_year: 2024, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "TiPro 7000",        release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "TiPlus 7100",       release_year: 2023, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "TiPlus 5000",       release_year: 2021, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "Ti600",             release_year: 2023, tier: entry, form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "Ti500",             release_year: 2023, tier: entry, form: "M.2 PCIe 4.0 DRAMless" }
+
+# ---------- SSD · 海康威视 Hikvision / 海康存储 ----------
+hikvision:
+  - { match: "CC700",             release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "CC500",             release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "C2000 Pro",         release_year: 2019, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "C2000 Lite",        release_year: 2019, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "E2000",             release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0" }
+
+# ---------- SSD · 铠侠 Kioxia（原东芝记忆业务）----------
+kioxia:
+  - { match: "Exceria Pro",       release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Exceria Plus G3",   release_year: 2023, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "Exceria Plus G2",   release_year: 2021, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "Exceria Plus",      release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "Exceria G2",        release_year: 2020, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "Exceria",           release_year: 2019, tier: entry, form: "SATA" }
+
+# ---------- SSD · 金百达 / 影驰 / aigo / 光威（国产常见）----------
+galaxy:    # 影驰
+  - { match: "HOF Extreme 50",    release_year: 2023, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "HOF Extreme",       release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "HOF Pro",           release_year: 2021, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Gamer",             release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0" }
+aigo:
+  - { match: "P7000Z",            release_year: 2023, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "P7000",             release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "P3500Z",            release_year: 2023, tier: entry, form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "P3500",             release_year: 2022, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+guangwei: # 光威
+  - { match: "弈 Pro",             release_year: 2023, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "弈 7000",            release_year: 2023, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "悍将",               release_year: 2021, tier: entry, form: "SATA" }
+
+# ---------- SSD · 三星 PM / 其他 OEM（常见二手流入）----------
+samsung_oem:
+  - { match: "PM9A1",             release_year: 2020, tier: high,  form: "M.2 PCIe 4.0 OEM" }   # 980 Pro OEM 版
+  - { match: "PM981",             release_year: 2017, tier: mid,   form: "M.2 PCIe 3.0 OEM" }
+  - { match: "PM991",             release_year: 2019, tier: mid,   form: "M.2 PCIe 3.0 OEM" }
+
+# ---------- SSD · Solidigm（Intel NAND 业务剥离至 SK Hynix）----------
+solidigm:
+  - { match: "P44 Pro",           release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "P41 Plus",          release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0" }
+
+# ---------- SSD · ADATA / XPG ----------
+adata:
+  - { match: "Legend 970",        release_year: 2023, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "Legend 960 Max",    release_year: 2023, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Legend 960",        release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Legend 840",        release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "Legend 800",        release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "Legend 750",        release_year: 2021, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "SX8200 Pro",        release_year: 2018, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "Gammix S70 Blade",  release_year: 2021, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Gammix S70",        release_year: 2021, tier: high,  form: "M.2 PCIe 4.0" }
+
+# ---------- SSD · Corsair ----------
+corsair:
+  - { match: "MP700",             release_year: 2023, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "MP600 Pro",         release_year: 2021, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "MP600",             release_year: 2020, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "MP510",             release_year: 2018, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "MP400",             release_year: 2020, tier: entry, form: "M.2 PCIe 3.0 QLC" }
+
+# ---------- SSD · 其他常见品牌（Silicon Power / Klevv / TEAMGROUP / SK Hynix / Mushkin / Acer / Addlink / Lexar）----------
+silicon_power:
+  - { match: "US75",              release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "UD90",              release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "UD85",              release_year: 2022, tier: entry, form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "UD70",              release_year: 2019, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "A80",               release_year: 2019, tier: mid,   form: "M.2 PCIe 3.0" }
+klevv:
+  - { match: "CRAS C910",         release_year: 2023, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "CRAS C920",         release_year: 2023, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "CRAS C900",         release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "CRAS C710",         release_year: 2021, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "CRAS X",            release_year: 2018, tier: high,  form: "M.2 PCIe 3.0" }
+teamgroup:
+  - { match: "MP44L",             release_year: 2023, tier: mid,   form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "MP44",              release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "MP34",              release_year: 2019, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "T-Force Cardea Z540",  release_year: 2024, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "T-Force Cardea",    release_year: 2020, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "GX2",               release_year: 2020, tier: entry, form: "SATA" }
+  - { match: "Vulcan Z",          release_year: 2020, tier: entry, form: "SATA" }
+sk_hynix:
+  - { match: "Platinum P41",      release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Platinum P51",      release_year: 2024, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "Gold P31",          release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "Gold S31",          release_year: 2020, tier: mid,   form: "SATA" }
+  - { match: "BC711",             release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0 OEM" }
+  - { match: "BC711",             release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0 OEM" }
+mushkin:
+  - { match: "Source HC",         release_year: 2020, tier: entry, form: "SATA" }
+  - { match: "Source 2",          release_year: 2018, tier: entry, form: "SATA" }
+  - { match: "Pilot-E",           release_year: 2019, tier: high,  form: "M.2 PCIe 3.0" }
+  - { match: "Vortex",            release_year: 2021, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "Redline",           release_year: 2019, tier: mid,   form: "M.2 PCIe 3.0" }
+acer:
+  - { match: "Predator GM7000",   release_year: 2021, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Predator GM7",      release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0" }
+  - { match: "Predator GM3500",   release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "Predator GM4",      release_year: 2023, tier: mid,   form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "FA100",             release_year: 2019, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+addlink:
+  - { match: "S95",               release_year: 2023, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "S90",               release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "S70",               release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "S68",               release_year: 2019, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "S50 Lite",          release_year: 2020, tier: entry, form: "SATA" }
+lexar:
+  - { match: "NM790",             release_year: 2023, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "NM800 Pro",         release_year: 2023, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "NM800",             release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "NM760",             release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "NM620",             release_year: 2021, tier: mid,   form: "M.2 PCIe 3.0 DRAMless" }
+pny:
+  - { match: "XLR8 CS3140",       release_year: 2021, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "CS3040",            release_year: 2020, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "CS2241",            release_year: 2023, tier: entry, form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "CS1031",            release_year: 2020, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "CS900",             release_year: 2018, tier: entry, form: "SATA" }
+patriot:
+  - { match: "Viper VP4300",      release_year: 2020, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Viper VP4100",      release_year: 2019, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "P400",              release_year: 2022, tier: mid,   form: "M.2 PCIe 4.0 DRAMless" }
+  - { match: "P300",              release_year: 2020, tier: entry, form: "M.2 PCIe 3.0 DRAMless" }
+  - { match: "Burst Elite",       release_year: 2020, tier: entry, form: "SATA" }
+  - { match: "Burst",             release_year: 2019, tier: entry, form: "SATA" }
+gigabyte:
+  - { match: "AORUS Gen5 12000",  release_year: 2024, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "AORUS Gen5",        release_year: 2023, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "AORUS Gen4 7300",   release_year: 2023, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "AORUS Gen4",        release_year: 2020, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "AORUS RGB",         release_year: 2019, tier: mid,   form: "M.2 PCIe 3.0" }
+msi:
+  - { match: "Spatium M580",      release_year: 2024, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "Spatium M570",      release_year: 2023, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "Spatium M480",      release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Spatium M470",      release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Spatium M390",      release_year: 2022, tier: mid,   form: "M.2 PCIe 3.0" }
+inland:
+  - { match: "Performance Plus",  release_year: 2022, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Premium",           release_year: 2020, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "Performance",       release_year: 2021, tier: mid,   form: "M.2 PCIe 3.0" }
+sabrent:
+  - { match: "Rocket 5",          release_year: 2024, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "Rocket 4 Plus",     release_year: 2021, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Rocket 4",          release_year: 2019, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "Rocket Q",          release_year: 2020, tier: entry, form: "M.2 PCIe 3.0 QLC" }
+  - { match: "Rocket",            release_year: 2019, tier: high,  form: "M.2 PCIe 3.0" }
+
+# ---------- SSD · 老 SSD 品牌（Intel / OCZ / SanDisk / Toshiba 旧线）----------
+# 历史型号命中率较高但市场价值低。保留是为让"全品类零漏"更近一步。
+intel:
+  - { match: "X25-M",             release_year: 2008, tier: high,  form: "SATA" }
+  - { match: "X25-V",             release_year: 2010, tier: entry, form: "SATA" }
+  - { match: "Intel 320",         release_year: 2011, tier: mid,   form: "SATA" }
+  - { match: "Intel 330",         release_year: 2012, tier: mid,   form: "SATA" }
+  - { match: "Intel 335",         release_year: 2012, tier: mid,   form: "SATA" }
+  - { match: "Intel 520",         release_year: 2012, tier: high,  form: "SATA" }
+  - { match: "Intel 525",         release_year: 2013, tier: high,  form: "mSATA" }
+  - { match: "Intel 530",         release_year: 2013, tier: mid,   form: "SATA" }
+  - { match: "Intel 535",         release_year: 2015, tier: mid,   form: "SATA" }
+  - { match: "Intel 540s",        release_year: 2016, tier: mid,   form: "SATA" }
+  - { match: "Intel 545s",        release_year: 2017, tier: mid,   form: "SATA" }
+  - { match: "Intel 600p",        release_year: 2016, tier: mid,   form: "M.2 PCIe 3.0" }
+  - { match: "Intel 660p",        release_year: 2018, tier: entry, form: "M.2 PCIe 3.0 QLC" }
+  - { match: "Intel 665p",        release_year: 2019, tier: entry, form: "M.2 PCIe 3.0 QLC" }
+  - { match: "Intel 670p",        release_year: 2021, tier: entry, form: "M.2 PCIe 3.0 QLC" }
+  - { match: "Intel 750",         release_year: 2015, tier: high,  form: "PCIe 3.0 x4 enterprise" }
+  - { match: "Intel 760p",        release_year: 2018, tier: mid,   form: "M.2 PCIe 3.0" }
+ocz:
+  - { match: "Vertex 4",          release_year: 2012, tier: high,  form: "SATA" }
+  - { match: "Vertex 3",          release_year: 2011, tier: high,  form: "SATA" }
+  - { match: "Vertex 2",          release_year: 2010, tier: high,  form: "SATA" }
+  - { match: "Vector",            release_year: 2012, tier: high,  form: "SATA" }
+  - { match: "Agility 4",         release_year: 2012, tier: mid,   form: "SATA" }
+  - { match: "Agility 3",         release_year: 2011, tier: mid,   form: "SATA" }
+  - { match: "Agility 2",         release_year: 2010, tier: mid,   form: "SATA" }
+  - { match: "Trion",             release_year: 2015, tier: entry, form: "SATA" }
+  - { match: "ARC 100",           release_year: 2014, tier: entry, form: "SATA" }
+sandisk:
+  - { match: "SanDisk Extreme Pro",  release_year: 2014, tier: high, form: "SATA" }
+  - { match: "SanDisk Extreme II",   release_year: 2013, tier: high, form: "SATA" }
+  - { match: "SanDisk Ultra II",     release_year: 2014, tier: mid,  form: "SATA" }
+  - { match: "SanDisk Ultra 3D",     release_year: 2017, tier: mid,  form: "SATA" }
+  - { match: "SanDisk Ultra",        release_year: 2013, tier: mid,  form: "SATA" }
+  - { match: "SSD Plus",             release_year: 2015, tier: entry, form: "SATA" }
+  - { match: "Plextor M8Pe",         release_year: 2016, tier: mid,  form: "M.2 PCIe 3.0" }  # 占位：Plextor 归此节省条目
+toshiba:
+  - { match: "OCZ RC",            release_year: 2017, tier: mid,   form: "M.2 PCIe 3.0" }   # Toshiba 收购后品牌过渡
+  - { match: "TR200",             release_year: 2017, tier: entry, form: "SATA" }
+  - { match: "Q300",              release_year: 2015, tier: mid,   form: "SATA" }
+  - { match: "XG6",               release_year: 2018, tier: mid,   form: "M.2 PCIe 3.0 OEM" }
+  - { match: "XG5",               release_year: 2017, tier: mid,   form: "M.2 PCIe 3.0 OEM" }
+mushkin_legacy:
+  - { match: "Chronos",           release_year: 2012, tier: mid,   form: "SATA" }
+  - { match: "Striker",           release_year: 2015, tier: high,  form: "SATA" }
+  - { match: "Atlas",             release_year: 2013, tier: mid,   form: "mSATA" }
+kingston_legacy:
+  - { match: "SSDNow V+",         release_year: 2010, tier: mid,   form: "SATA" }
+  - { match: "SSDNow V300",       release_year: 2013, tier: mid,   form: "SATA" }
+  - { match: "SSDNow",            release_year: 2010, tier: mid,   form: "SATA" }  # 通用降级
+  - { match: "HyperX 3K",         release_year: 2012, tier: high,  form: "SATA" }
+  - { match: "HyperX Fury",       release_year: 2014, tier: mid,   form: "SATA" }
+  - { match: "HyperX Savage",     release_year: 2015, tier: high,  form: "SATA" }
+  - { match: "HyperX Predator",   release_year: 2014, tier: high,  form: "M.2 / PCIe" }
+  - { match: "UV500",             release_year: 2018, tier: mid,   form: "SATA" }
+  - { match: "UV400",             release_year: 2016, tier: mid,   form: "SATA" }
+visiontek:
+  - { match: "VisionTek PRO",     release_year: 2015, tier: mid,   form: "SATA" }
+  - { match: "VisionTek",         release_year: 2014, tier: entry, form: "SATA" }
+avexir:
+  - { match: "Avexir S100",       release_year: 2018, tier: entry, form: "SATA" }
+  - { match: "Avexir S80",        release_year: 2017, tier: entry, form: "SATA" }
+
+# ---------- HDD · Seagate ----------
+seagate:
+  - { match: "IronWolf Pro",         release_year: 2016, tier: high,  form: "SATA NAS" }
+  - { match: "IronWolf",             release_year: 2016, tier: mid,   form: "SATA NAS" }
+  - { match: "BarraCuda Pro",        release_year: 2016, tier: high,  form: "SATA" }
+  - { match: "BarraCuda",            release_year: 2016, tier: mid,   form: "SATA" }
+  - { match: "SkyHawk AI",           release_year: 2017, tier: high,  form: "SATA surveillance" }
+  - { match: "SkyHawk",              release_year: 2016, tier: mid,   form: "SATA surveillance" }
+  - { match: "FireCuda 530",         release_year: 2021, tier: high,  form: "M.2 PCIe 4.0" }
+  - { match: "FireCuda 540",         release_year: 2023, tier: high,  form: "M.2 PCIe 5.0" }
+  - { match: "FireCuda",             release_year: 2016, tier: high,  form: "SATA SSHD" }
+  - { match: "Exos",                 release_year: 2017, tier: high,  form: "SATA enterprise" }
+  - { match: "Nytro",                release_year: 2017, tier: high,  form: "SATA enterprise SSD" }
+  - { match: "Enterprise Capacity",  release_year: 2014, tier: high,  form: "SATA enterprise" }
+  - { match: "Enterprise Performance", release_year: 2012, tier: high,  form: "SAS enterprise" }
+  - { match: "Constellation ES.3",   release_year: 2013, tier: high,  form: "SATA enterprise" }
+  - { match: "Constellation ES",     release_year: 2010, tier: high,  form: "SATA enterprise" }
+  - { match: "Surveillance HDD",     release_year: 2014, tier: mid,   form: "SATA surveillance" }
+  - { match: "Savvio",               release_year: 2009, tier: high,  form: "SAS 2.5\"" }
+
+# ---------- HDD · Toshiba ----------
+toshiba_hdd:
+  - { match: "N300",              release_year: 2017, tier: mid,   form: "SATA NAS" }
+  - { match: "X300",              release_year: 2016, tier: high,  form: "SATA high-perf" }
+  - { match: "P300",              release_year: 2016, tier: mid,   form: "SATA" }
+  - { match: "L200",              release_year: 2018, tier: entry, form: "2.5\" mobile" }
+  - { match: "V300",              release_year: 2016, tier: mid,   form: "SATA surveillance" }
+  - { match: "S300",              release_year: 2017, tier: mid,   form: "SATA surveillance NAS" }
+  - { match: "MG Series",         release_year: 2015, tier: high,  form: "SATA enterprise" }
+  - { match: "Toshiba HDK",       release_year: 2014, tier: mid,   form: "2.5\" mobile OEM" }
+
+# ---------- HDD · Western Digital ----------
+# pc-part-dataset HDD 名称用 "Western Digital ..." 全称，不是 "WD"
+# Red Plus / Red Pro / Gold / Purple / Ultrastar 都是 WD 专属词，不会误匹配
+wd_hdd:
+  # 用 WD 专属词（Red Plus / Red Pro / Caviar / VelociRaptor / Scorpio），不依赖 "WD" 或 "Western Digital" 前缀
+  # 这样 "Western Digital Red Pro" 和 "Western Digital WD Red Pro"（双品牌冗余命名）都能命中
+  - { match: "Red Plus",                  release_year: 2020, tier: mid,   form: "SATA NAS CMR" }
+  - { match: "Red Pro",                   release_year: 2015, tier: high,  form: "SATA NAS" }
+  - { match: "WD Red",                    release_year: 2012, tier: mid,   form: "SATA NAS" }
+  - { match: "Western Digital Red",       release_year: 2012, tier: mid,   form: "SATA NAS" }
+  - { match: "Western Digital Gold",      release_year: 2016, tier: high,  form: "SATA enterprise" }
+  - { match: "Western Digital Black",     release_year: 2013, tier: high,  form: "SATA" }
+  - { match: "Western Digital Blue",      release_year: 2013, tier: mid,   form: "SATA" }
+  - { match: "Western Digital Purple",    release_year: 2014, tier: mid,   form: "SATA surveillance" }
+  - { match: "Western Digital Green",     release_year: 2014, tier: entry, form: "SATA low-power" }
+  - { match: "Caviar",                    release_year: 2010, tier: entry, form: "SATA" }   # 老款 WD Caviar Blue/Black/Green
+  - { match: "VelociRaptor",              release_year: 2008, tier: high,  form: "SATA 10K RPM" }
+  - { match: "Scorpio",                   release_year: 2010, tier: mid,   form: "2.5\" mobile" }
+  - { match: "AV-GP",                     release_year: 2010, tier: mid,   form: "SATA AV" }
+  - { match: "Ultrastar",                 release_year: 2018, tier: high,  form: "SATA enterprise" }

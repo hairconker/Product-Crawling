@@ -1,0 +1,15 @@
+Athlon 3000G (14nm)
+Athlon X2 370K
+Core i7-10700K Avengers Collector's Edition
+Core i9-10850KA Avengers Limited Edition
+Core i9-9900K (Standard Folding Box)
+EPYC 4364P
+EPYC 4484PX
+Ryzen 3 1200 (12nm)
+Ryzen 3 1200 (14nm)
+Ryzen 5 1600 (12nm)
+Ryzen 5 1600 (14nm)
+Ryzen 5 PRO 7645
+GeForce GTX 950 75W
+RTX 2000E Ada Generation
+Titan X (Pascal)

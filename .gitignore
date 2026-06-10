@@ -27,8 +27,19 @@ vendor/
 # Codex 插件标记
 .codex
 
+# 本机 Agent/浏览器调试状态（可从备份恢复，不上传 GitHub）
+.agents/
+.playwright-mcp/
+
+# Codex 会话导出归档（包含聊天内容、路径和工具输出，禁止提交）
+/codex-session-export*/
+
 # Claude Code 本地权限设置（每机不同）
 .claude/settings.local.json
+.claude/worktrees/
 
 # 历史遗留（开发中跑过的 pdd 登录态）
 state/pdd_*
+
+# 第三方 API 凭据（appkey/secretkey 等，严禁提交）
+secrets/

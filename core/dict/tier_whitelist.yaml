@@ -1,0 +1,195 @@
+# 风扇 / 机箱 / 电源 · 档位白名单
+#
+# 设计意图
+# --------
+# 用户决策：这三个品类不做"全 SKU 爬"，只搜人工精选的知名型号。
+#   - 风扇/机箱：按档位收敛（每档 3-5 款），避免被山寨 SKU 淹没
+#   - 电源：只留 mid/high 档（entry 档电源安全性风险，不列）
+#
+# 与 drives_release.yaml 的区别：
+#   drives 是"对任何 SKU 尝试匹配"的降级查表；
+#   tier_whitelist 是"只搜白名单里的型号"的正向清单，下游 price crawler 据此生成关键词。
+#
+# 档位含义（统一三品类）：
+#   - high:  旗舰/发烧级（风扇：Noctua A12x25 / 电源：海韵 PRIME / 机箱：海盗船 7000X）
+#   - mid:   主流中端（电竞玩家常规选择）
+#   - entry: 入门（仅风扇/机箱允许；电源品类此档留空，已注释说明）
+#
+# 数据来源：各品牌中文官网 + JD 自营旗舰店 2026-04 主销型号。
+# 数据更新策略：建议半年复查一次，命名保留较宽松（子串匹配）。
+#
+# schema 参考：query via parse_model.tier_whitelist_models(category)
+
+# ============================================================
+# 风扇（CPU 散热 + 机箱风扇统一归类；下游按 model 自行识别用途）
+# ============================================================
+fan:
+  noctua:    # 奥地利 Noctua — 风扇标杆，高端首选
+    - { model: "NF-A12x25 PWM",       tier: high,  release_year: 2018, size: "120mm" }
+    - { model: "NF-A14 PWM",          tier: high,  release_year: 2013, size: "140mm" }
+    - { model: "NF-F12 PWM",          tier: high,  release_year: 2012, size: "120mm" }
+    - { model: "NH-D15",              tier: high,  release_year: 2014, size: "双塔 CPU 散热" }
+    - { model: "NH-U12A",             tier: high,  release_year: 2019, size: "单塔 CPU 散热" }
+    - { model: "NH-L9i",              tier: mid,   release_year: 2013, size: "ITX CPU 散热" }
+  be_quiet:   # be quiet!（德系，静音款）
+    - { model: "Silent Wings 4",      tier: high,  release_year: 2022, size: "120/140mm" }
+    - { model: "Silent Wings 3",      tier: high,  release_year: 2016, size: "120/140mm" }
+    - { model: "Pure Wings 2",        tier: mid,   release_year: 2015, size: "120/140mm" }
+    - { model: "Dark Rock Pro 4",     tier: high,  release_year: 2018, size: "双塔 CPU 散热" }
+    - { model: "Dark Rock 4",         tier: mid,   release_year: 2018, size: "单塔 CPU 散热" }
+  arctic:     # Arctic — 性价比标杆
+    - { model: "P12 PWM PST",         tier: mid,   release_year: 2018, size: "120mm" }
+    - { model: "P14 PWM PST",         tier: mid,   release_year: 2018, size: "140mm" }
+    - { model: "BioniX P120",         tier: mid,   release_year: 2020, size: "120mm" }
+    - { model: "Freezer 34 eSports",  tier: mid,   release_year: 2019, size: "单塔 CPU 散热" }
+    - { model: "Liquid Freezer II 360", tier: high, release_year: 2020, size: "360 水冷" }
+    - { model: "Liquid Freezer III 360", tier: high, release_year: 2024, size: "360 水冷" }
+  corsair:
+    - { model: "ML120 PRO",           tier: mid,   release_year: 2017, size: "120mm" }
+    - { model: "LL120",               tier: mid,   release_year: 2018, size: "120mm RGB" }
+    - { model: "QX120 RGB",           tier: high,  release_year: 2023, size: "120mm RGB" }
+    - { model: "iCUE H150i Elite",    tier: high,  release_year: 2022, size: "360 水冷" }
+  lian_li:    # 联力
+    - { model: "UNI FAN SL120 V2",    tier: high,  release_year: 2023, size: "120mm RGB" }
+    - { model: "UNI FAN SL120",       tier: high,  release_year: 2020, size: "120mm RGB" }
+    - { model: "UNI FAN AL120 V2",    tier: mid,   release_year: 2023, size: "120mm RGB" }
+  cooler_master:   # 酷冷至尊
+    - { model: "MasterLiquid ML360",  tier: high,  release_year: 2020, size: "360 水冷" }
+    - { model: "Hyper 212 Black Edition", tier: entry, release_year: 2019, size: "单塔 CPU 散热" }
+    - { model: "Hyper 212 Halo",      tier: mid,   release_year: 2023, size: "单塔 CPU 散热 RGB" }
+    - { model: "SickleFlow 120 ARGB", tier: mid,   release_year: 2020, size: "120mm RGB" }
+  thermalright: # 利民（国产高性价比首选）
+    - { model: "Peerless Assassin 120 SE", tier: mid, release_year: 2022, size: "双塔 CPU 散热" }
+    - { model: "Peerless Assassin 120",    tier: mid, release_year: 2020, size: "双塔 CPU 散热" }
+    - { model: "Frozen Notte",       tier: high,  release_year: 2023, size: "双塔 ARGB" }
+    - { model: "AX120R SE",          tier: entry, release_year: 2021, size: "单塔 CPU 散热" }
+    - { model: "Frozen Magic 240",   tier: mid,   release_year: 2022, size: "240 水冷" }
+  id_cooling:  # ID-COOLING（国产中低端）
+    - { model: "SE-214 XT",          tier: entry, release_year: 2022, size: "单塔 CPU 散热" }
+    - { model: "SE-224 XT",          tier: entry, release_year: 2022, size: "单塔 CPU 散热" }
+    - { model: "FROZN A620",         tier: mid,   release_year: 2023, size: "双塔 CPU 散热" }
+    - { model: "ZOOMFLOW 240",       tier: mid,   release_year: 2020, size: "240 水冷" }
+
+# ============================================================
+# 机箱
+# ============================================================
+case:
+  lian_li:     # 联力 — 铝制旗舰首选
+    - { model: "O11 Dynamic EVO",    tier: high, release_year: 2022, form: "ATX mid-tower" }
+    - { model: "O11 Dynamic",        tier: high, release_year: 2019, form: "ATX mid-tower" }
+    - { model: "O11D Mini",          tier: high, release_year: 2021, form: "mATX/ITX" }
+    - { model: "A4-H2O",             tier: high, release_year: 2021, form: "ITX" }
+    - { model: "PC-O11 Air",         tier: mid,  release_year: 2020, form: "ATX mid-tower" }
+    - { model: "Lancool III",        tier: mid,  release_year: 2023, form: "ATX mid-tower" }
+    - { model: "Lancool 216",        tier: mid,  release_year: 2022, form: "ATX mid-tower" }
+  fractal_design:
+    - { model: "Meshify 2",          tier: high, release_year: 2021, form: "ATX mid-tower" }
+    - { model: "Torrent",            tier: high, release_year: 2021, form: "ATX mid-tower" }
+    - { model: "North",              tier: high, release_year: 2023, form: "ATX mid-tower" }
+    - { model: "Pop Air",            tier: mid,  release_year: 2022, form: "ATX mid-tower" }
+    - { model: "Define 7",           tier: high, release_year: 2020, form: "ATX full-tower 静音" }
+  nzxt:
+    - { model: "H9 Flow",            tier: high, release_year: 2023, form: "ATX mid-tower 双仓" }
+    - { model: "H7 Elite",           tier: high, release_year: 2022, form: "ATX mid-tower" }
+    - { model: "H7 Flow",            tier: mid,  release_year: 2022, form: "ATX mid-tower" }
+    - { model: "H5 Elite",           tier: mid,  release_year: 2023, form: "ATX mid-tower" }
+    - { model: "H5 Flow",            tier: mid,  release_year: 2023, form: "ATX mid-tower" }
+  corsair:
+    - { model: "7000D Airflow",      tier: high, release_year: 2021, form: "ATX full-tower" }
+    - { model: "5000D Airflow",      tier: high, release_year: 2020, form: "ATX mid-tower" }
+    - { model: "4000D Airflow",      tier: mid,  release_year: 2020, form: "ATX mid-tower" }
+    - { model: "3000D Airflow",      tier: mid,  release_year: 2023, form: "ATX mid-tower 紧凑" }
+    - { model: "iCUE 2000D",         tier: mid,  release_year: 2023, form: "ITX" }
+  be_quiet:
+    - { model: "Pure Base 500DX",    tier: mid,  release_year: 2020, form: "ATX mid-tower" }
+    - { model: "Silent Base 802",    tier: high, release_year: 2021, form: "ATX mid-tower 静音" }
+  cooler_master:
+    - { model: "NR200P",             tier: mid,  release_year: 2020, form: "ITX" }
+    - { model: "NR200P V2",          tier: mid,  release_year: 2023, form: "ITX" }
+    - { model: "MasterBox TD500 Mesh", tier: mid, release_year: 2019, form: "ATX mid-tower" }
+    - { model: "HAF 700 EVO",        tier: high, release_year: 2022, form: "ATX E-tower" }
+  phanteks:    # 追风者
+    - { model: "Enthoo Pro 2",       tier: high, release_year: 2020, form: "ATX full-tower" }
+    - { model: "Eclipse G360A",      tier: mid,  release_year: 2022, form: "ATX mid-tower" }
+    - { model: "NV7",                tier: high, release_year: 2022, form: "ATX showcase" }
+    - { model: "NV5",                tier: high, release_year: 2023, form: "ATX showcase" }
+  antec:       # 安钛克
+    - { model: "P120 Crystal",       tier: mid,  release_year: 2019, form: "ATX mid-tower" }
+    - { model: "DF700 Flux",         tier: mid,  release_year: 2021, form: "ATX mid-tower" }
+  segotep:     # 鑫谷（国产）
+    - { model: "幻银 GS8",           tier: mid,  release_year: 2023, form: "ATX mid-tower" }
+    - { model: "无界 A270",          tier: entry, release_year: 2023, form: "mATX 紧凑" }
+  jonsbo:      # 乔思伯 — 国产 ITX/背插王
+    - { model: "D41 Mesh",           tier: mid,  release_year: 2023, form: "ATX mid-tower 背插" }
+    - { model: "D31 Mesh",           tier: mid,  release_year: 2023, form: "mATX 背插" }
+    - { model: "N2",                 tier: mid,  release_year: 2022, form: "NAS ITX 8 盘位" }
+    - { model: "N3",                 tier: mid,  release_year: 2023, form: "NAS 8 盘位" }
+  chieftec_or_montech:  # 君主/君凡（国产性价比入门）
+    - { model: "君主 GD500",         tier: entry, release_year: 2022, form: "ATX mid-tower" }
+    - { model: "君凡 AIR 900",       tier: entry, release_year: 2023, form: "ATX mid-tower" }
+
+# ============================================================
+# 电源（只收 mid/high 档——entry 档不列，用户诉求"只选中高端"）
+# ============================================================
+# 说明：80Plus 认证从 Bronze 向上：Silver → Gold → Platinum → Titanium
+# mid 档通常是 80Plus Gold 额定 550-750W
+# high 档通常是 80Plus Platinum/Titanium 额定 850W+
+psu:
+  seasonic:    # 海韵 — 电源标杆
+    - { model: "PRIME TX",           tier: high, release_year: 2020, cert: "80Plus Titanium" }
+    - { model: "PRIME PX",           tier: high, release_year: 2020, cert: "80Plus Platinum" }
+    - { model: "PRIME GX",           tier: high, release_year: 2020, cert: "80Plus Gold" }
+    - { model: "VERTEX PX",          tier: high, release_year: 2023, cert: "80Plus Platinum ATX 3.0" }
+    - { model: "VERTEX GX",          tier: high, release_year: 2023, cert: "80Plus Gold ATX 3.0" }
+    - { model: "FOCUS GX",           tier: mid,  release_year: 2019, cert: "80Plus Gold" }
+    - { model: "FOCUS SGX",          tier: mid,  release_year: 2019, cert: "80Plus Gold SFX" }
+  corsair:
+    - { model: "AX1600i",            tier: high, release_year: 2018, cert: "80Plus Titanium 数字" }
+    - { model: "HX1500i",            tier: high, release_year: 2023, cert: "80Plus Platinum ATX 3.0" }
+    - { model: "RMx Shift",          tier: high, release_year: 2023, cert: "80Plus Gold 背插" }
+    - { model: "RM1000x",            tier: high, release_year: 2021, cert: "80Plus Gold ATX 3.0" }
+    - { model: "RM850x",             tier: high, release_year: 2021, cert: "80Plus Gold" }
+    - { model: "RM750e",             tier: mid,  release_year: 2022, cert: "80Plus Gold ATX 3.0" }
+    - { model: "RM650x",             tier: mid,  release_year: 2021, cert: "80Plus Gold" }
+    - { model: "SF750",              tier: high, release_year: 2019, cert: "80Plus Platinum SFX" }
+    - { model: "SF1000",             tier: high, release_year: 2023, cert: "80Plus Platinum SFX ATX 3.0" }
+  be_quiet:
+    - { model: "Dark Power Pro 13",  tier: high, release_year: 2023, cert: "80Plus Titanium ATX 3.0" }
+    - { model: "Straight Power 12",  tier: high, release_year: 2023, cert: "80Plus Platinum ATX 3.0" }
+    - { model: "Pure Power 12 M",    tier: mid,  release_year: 2023, cert: "80Plus Gold ATX 3.0" }
+  super_flower:  # 振华
+    - { model: "LEADEX VII XG",      tier: high, release_year: 2023, cert: "80Plus Gold ATX 3.0" }
+    - { model: "LEADEX VII Pro",     tier: high, release_year: 2023, cert: "80Plus Platinum ATX 3.0" }
+    - { model: "LEADEX Titanium",    tier: high, release_year: 2019, cert: "80Plus Titanium" }
+    - { model: "LEADEX III Gold",    tier: mid,  release_year: 2019, cert: "80Plus Gold" }
+  fsp:         # 全汉
+    - { model: "Hydro PTM X PRO",    tier: high, release_year: 2023, cert: "80Plus Platinum ATX 3.0" }
+    - { model: "Hydro G PRO",        tier: mid,  release_year: 2020, cert: "80Plus Gold" }
+    - { model: "Dagger Pro",         tier: high, release_year: 2020, cert: "80Plus Gold SFX" }
+  cooler_master:
+    - { model: "V850 Platinum V2",   tier: high, release_year: 2022, cert: "80Plus Platinum ATX 3.0" }
+    - { model: "MWE Gold V2",        tier: mid,  release_year: 2021, cert: "80Plus Gold" }
+    - { model: "V SFX Platinum",     tier: high, release_year: 2022, cert: "80Plus Platinum SFX" }
+  evga:
+    - { model: "SuperNOVA G7",       tier: high, release_year: 2021, cert: "80Plus Gold" }
+    - { model: "SuperNOVA P6",       tier: high, release_year: 2021, cert: "80Plus Platinum" }
+    - { model: "SuperNOVA T2",       tier: high, release_year: 2017, cert: "80Plus Titanium" }
+  asus_rog:    # 华硕 ROG 电源
+    - { model: "ROG Strix 1000W",    tier: high, release_year: 2022, cert: "80Plus Gold ATX 3.0" }
+    - { model: "ROG Loki 1000W",     tier: high, release_year: 2023, cert: "80Plus Platinum SFX-L" }
+    - { model: "ROG Thor 1000W Platinum II", tier: high, release_year: 2021, cert: "80Plus Platinum" }
+  msi_meg:     # 微星 MEG 电源
+    - { model: "MEG Ai1300P PCIE5",  tier: high, release_year: 2022, cert: "80Plus Platinum ATX 3.0" }
+    - { model: "MEG Ai1000P PCIE5",  tier: high, release_year: 2022, cert: "80Plus Platinum ATX 3.0" }
+    - { model: "MPG A850GF",         tier: mid,  release_year: 2021, cert: "80Plus Gold" }
+  thermaltake:
+    - { model: "Toughpower GF3",     tier: high, release_year: 2022, cert: "80Plus Gold ATX 3.0" }
+    - { model: "Toughpower iRGB PLUS Titanium", tier: high, release_year: 2019, cert: "80Plus Titanium" }
+  # 国产主流（仅列 Gold 及以上——不列白牌 Bronze）
+  great_wall:   # 长城
+    - { model: "巨龙 V850",          tier: mid,  release_year: 2022, cert: "80Plus Gold ATX 3.0" }
+    - { model: "雪豹 V750",          tier: mid,  release_year: 2023, cert: "80Plus Gold ATX 3.0" }
+    - { model: "HOPELY HX850",       tier: mid,  release_year: 2021, cert: "80Plus Gold" }
+  huntkey:      # 航嘉
+    - { model: "WD700K",             tier: mid,  release_year: 2020, cert: "80Plus Gold" }
+    - { model: "MVP K850",           tier: mid,  release_year: 2022, cert: "80Plus Gold ATX 3.0" }

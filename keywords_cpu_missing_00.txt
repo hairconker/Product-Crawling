@@ -1,0 +1,123 @@
+A10-6700
+A10-6700T
+A10-6790B
+A10-6800K
+A10-7700K
+A10-7800
+A10-7850K
+A10-9700
+A4-6300
+A4-6320
+A6-6400K
+A6-7400K
+A8-6600K
+A8-7600
+A8-7650K
+A8-9600
+Athlon 200GE
+Athlon 3000G (14nm)
+Athlon X2 340
+Athlon X2 370K
+Athlon X4 860K
+Celeron G3900
+Celeron G3930
+Celeron G4900
+Celeron G5900
+Celeron G5905
+Celeron G5925
+Celeron G6900
+Core Ultra 5 225
+Core Ultra 5 225F
+Core Ultra 5 235
+Core Ultra 5 245K
+Core Ultra 5 245KF
+Core Ultra 7 265
+Core Ultra 7 265F
+Core Ultra 7 265K
+Core Ultra 7 265KF
+Core Ultra 9 285
+Core Ultra 9 285K
+Core i3-10100
+Core i3-10100F
+Core i3-10100T
+Core i3-10105
+Core i3-10105F
+Core i3-10300
+Core i3-10305
+Core i3-10320
+Core i3-10325
+Core i3-12100
+Core i3-12100F
+Core i3-12100T
+Core i3-13100
+Core i3-13100F
+Core i3-13100T
+Core i3-14100
+Core i3-14100F
+Core i3-4130
+Core i3-4130T
+Core i3-4150
+Core i3-4160
+Core i3-4160T
+Core i3-4170
+Core i3-4330
+Core i3-4340
+Core i3-4350
+Core i3-4360
+Core i3-4360T
+Core i3-4370
+Core i3-6098P
+Core i3-6100
+Core i3-6100T
+Core i3-6300
+Core i3-6300T
+Core i3-6320
+Core i3-7100
+Core i3-7100T
+Core i3-7101TE
+Core i3-7300
+Core i3-7300T
+Core i3-7320
+Core i3-7350K
+Core i3-8100
+Core i3-8100T
+Core i3-8300
+Core i3-8300T
+Core i3-8350K
+Core i3-9100
+Core i3-9100F
+Core i3-9100T
+Core i3-9300
+Core i3-9320
+Core i3-9350K
+Core i3-9350KF
+Core i5-10400
+Core i5-10400F
+Core i5-10500
+Core i5-10600
+Core i5-10600K
+Core i5-10600KF
+Core i5-11400
+Core i5-11400F
+Core i5-11500
+Core i5-11600
+Core i5-11600K
+Core i5-11600KF
+Core i5-12400
+Core i5-12400F
+Core i5-12500
+Core i5-12600
+Core i5-12600K
+Core i5-12600KF
+Core i5-13400
+Core i5-13400F
+Core i5-13500
+Core i5-13500T
+Core i5-13600
+Core i5-13600K
+Core i5-13600KF
+Core i5-14400
+Core i5-14400F
+Core i5-14500
+Core i5-14500T
+Core i5-14600K

@@ -11,8 +11,9 @@
 | [zhinianboke/xianyu-auto-reply](https://github.com/zhinianboke/xianyu-auto-reply) | `vendor/zhinianboke-xianyu-auto-reply` | `e85d74ace7c6` | 闲鱼 | sign 算法 + 商品搜索备选 | 仅学习 | `utils/xianyu_utils.py`、`utils/item_search.py` | 2026-04-18 |
 | [cclient/tmallSign](https://github.com/cclient/tmallSign) | `vendor/cclient-tmallSign` | `505bbfa432cc` | 淘宝 | 淘宝/天猫 mtop sign 算法（不需 appkey） | Apache-2.0 | `app.js`（Express HTTP 服务） | 2026-04-18 |
 | [xinlingqudongX/TSDK](https://github.com/xinlingqudongX/TSDK) | `vendor/xinlingqudongX-TSDK` | `e201ad2fc578` | 淘宝 | mtop 搜索历史参考（**已归档 2026-04-03**，作为快照） | 无 | `TSDK/` 模块 | 2026-04-18 |
+| [docyx/pc-part-dataset](https://github.com/docyx/pc-part-dataset) | `vendor/pc-part-dataset` | `c52a04ca9465` | DIY 字典 | 阶段 9 一级字典数据源（25 品类 × 66,778 SKU JSON） | MIT | `data/json/*.json` | 2026-04-20 |
 
-**总占用**：约 12 MB（其中 `xianyu-auto-reply` 11 MB，含 frontend 资源）
+**总占用**：约 15 MB（其中 `xianyu-auto-reply` 11 MB，`pc-part-dataset` ~3 MB）
 
 ---
 
@@ -27,6 +28,15 @@
 ---
 
 ## 操作记录
+
+### 2026-04-20 DIY 字典数据源（阶段 9）
+
+```bash
+git clone --depth 1 https://github.com/docyx/pc-part-dataset.git vendor/pc-part-dataset
+# commit: c52a04ca9465c83997ed335f7767b09a2005dd26
+```
+
+用途：作为一级字典底座，阶段 9 `core/dict/builder.py` 读 `vendor/pc-part-dataset/data/json/*.json` 归一化输出到 `data/dict/YYYY-Www/` 与 `data/skus/YYYY-Www/`。不改 vendor 下文件。
 
 ### 2026-04-18 第二批（按 `/github-reuse` 调研结论）
 

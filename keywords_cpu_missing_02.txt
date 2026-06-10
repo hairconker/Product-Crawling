@@ -1,0 +1,121 @@
+Core i9-11900K
+Core i9-11900KF
+Core i9-12900
+Core i9-12900F
+Core i9-12900K
+Core i9-12900KF
+Core i9-12900KS
+Core i9-13900
+Core i9-13900F
+Core i9-13900K
+Core i9-13900KF
+Core i9-13900KS
+Core i9-13900T
+Core i9-14900
+Core i9-14900F
+Core i9-14900K
+Core i9-14900KF
+Core i9-14900KS
+Core i9-7900X
+Core i9-7920X
+Core i9-7940X
+Core i9-7960X
+Core i9-7980XE
+Core i9-9820X
+Core i9-9900
+Core i9-9900K
+Core i9-9900K (Standard Folding Box)
+Core i9-9900KF
+Core i9-9900KS
+Core i9-9900T
+Core i9-9900X
+Core i9-9920X
+Core i9-9940X
+Core i9-9960X
+Core i9-9980XE
+EPYC 4244P
+EPYC 4344P
+EPYC 4364P
+EPYC 4464P
+EPYC 4484PX
+EPYC 4584PX
+FX-4300
+FX-4350
+FX-6300
+FX-6350
+FX-8300
+FX-8320
+FX-8320E
+FX-8370
+FX-9590
+Pentium G3220
+Pentium G3258
+Pentium G4400
+Pentium G4560
+Pentium G4600
+Pentium Gold G5400
+Pentium Gold G5420
+Pentium Gold G6400
+Pentium Gold G6405
+Pentium Gold G6600
+Pentium Gold G7400
+Ryzen 3 1200 (12nm)
+Ryzen 3 1200 (14nm)
+Ryzen 3 1300X
+Ryzen 3 3300X
+Ryzen 5 1400
+Ryzen 5 1500X
+Ryzen 5 1600 (12nm)
+Ryzen 5 1600 (14nm)
+Ryzen 5 3500
+Ryzen 5 3600XT
+Ryzen 5 5600T
+Ryzen 5 PRO 7645
+Ryzen 7 1700X
+Ryzen 7 1800X
+Ryzen 7 3800XT
+Ryzen 7 PRO 7745
+Ryzen 9 3900
+Ryzen 9 5900XT
+Ryzen 9 PRO 7945
+Threadripper 1900X
+Threadripper 1920X
+Threadripper 1950X
+Threadripper 2920X
+Threadripper 2950X
+Threadripper 2970WX
+Threadripper 2990WX
+Xeon E-2286G
+Xeon E-2288G
+Xeon E3-1220 V6
+Xeon E3-1230 V3
+Xeon E3-1231 V3
+Xeon E3-1240L V5
+Xeon E3-1241 V3
+Xeon E3-1245 V6
+Xeon E3-1270 V3
+Xeon E5-1620 V3
+Xeon E5-1620 V4
+Xeon E5-1630 V4
+Xeon E5-1650 V3
+Xeon E5-1650 V4
+Xeon E5-1660 V3
+Xeon E5-2620 V3
+Xeon E5-2630 V3
+Xeon E5-2630 V4
+Xeon E5-2640 V4
+Xeon E5-2650 V4
+Xeon E5-2660 V3
+Xeon E5-2660 V4
+Xeon E5-2667 V3
+Xeon E5-2670 V3
+Xeon E5-2680 V3
+Xeon E5-2683 V4
+Xeon E5-2687W V4
+Xeon E5-2690 V4
+Xeon E5-2695 V3
+Xeon E5-2695 V4
+Xeon E5-2697 V3
+Xeon E5-2697 V4
+Xeon E5-2698 V4
+Xeon E5-2699 V3

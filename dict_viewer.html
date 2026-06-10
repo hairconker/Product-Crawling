@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>装机字典数据视图</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        padding: 16px;
+        font-family: -apple-system, "Segoe UI", "PingFang SC", "Microsoft YaHei", sans-serif;
+        background: #f5f5f7;
+        color: #1d1d1f;
+        line-height: 1.5;
+    }
+    a { color: #0071e3; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        align-items: center;
+        padding: 12px 16px;
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+        margin-bottom: 16px;
+    }
+    header h1 { font-size: 18px; margin: 0; color: #0071e3; }
+    header select, header input {
+        padding: 5px 10px;
+        border: 1px solid #d2d2d7;
+        border-radius: 6px;
+        font-size: 13px;
+        background: #fff;
+        color: #1d1d1f;
+    }
+    .kpis { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+    .kpi {
+        padding: 6px 12px;
+        background: #f5f5f7;
+        border-radius: 8px;
+        font-size: 12px;
+        color: #6e6e73;
+    }
+    .kpi b { color: #1d1d1f; font-size: 16px; margin-right: 4px; }
+
+    .layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; }
+    @media (max-width: 900px) { .layout { grid-template-columns: 1fr; } }
+
+    .panel {
+        background: #fff;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        overflow: hidden;
+    }
+    .panel-hd {
+        padding: 10px 14px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #6e6e73;
+        border-bottom: 1px solid #f0f0f3;
+        background: #fafafa;
+    }
+
+    /* ---- 分类列表 ---- */
+    .cat-list { list-style: none; margin: 0; padding: 4px; }
+    .cat-item {
+        padding: 10px 12px;
+        border-radius: 8px;
+        cursor: pointer;
+        margin-bottom: 2px;
+        transition: background 0.15s;
+    }
+    .cat-item:hover { background: #f5f5f7; }
+    .cat-item.active { background: #0071e3; color: #fff; }
+    .cat-item.active .cat-nums span { color: rgba(255,255,255,0.9); }
+    .cat-item.active .bar { background: rgba(255,255,255,0.25); }
+    .cat-item.active .bar-fill { background: #fff; }
+    .cat-name { font-size: 14px; font-weight: 600; display: flex; justify-content: space-between; }
+    .cat-name .sku-count { font-size: 13px; font-weight: 500; opacity: 0.85; }
+    .cat-nums { font-size: 11px; color: #6e6e73; margin-top: 4px; display: flex; gap: 10px; }
+    .bar {
+        margin-top: 6px;
+        height: 3px;
+        background: #e5e5ea;
+        border-radius: 2px;
+        overflow: hidden;
+    }
+    .bar-fill { height: 100%; background: #0071e3; transition: width 0.3s; }
+
+    /* ---- 详情栏 ---- */
+    .tabs {
+        display: flex;
+        gap: 4px;
+        padding: 10px 14px 0;
+        border-bottom: 1px solid #f0f0f3;
+    }
+    .tab {
+        padding: 8px 16px;
+        border-radius: 8px 8px 0 0;
+        cursor: pointer;
+        font-size: 13px;
+        color: #6e6e73;
+        border: 1px solid transparent;
+        border-bottom: none;
+        user-select: none;
+    }
+    .tab.active { color: #0071e3; border-color: #e5e5ea; background: #fff; font-weight: 600; margin-bottom: -1px; }
+    .tab .badge {
+        margin-left: 6px;
+        padding: 1px 6px;
+        border-radius: 10px;
+        background: #f5f5f7;
+        font-size: 11px;
+        color: #6e6e73;
+    }
+    .tab.active .badge { background: #e8f4fe; color: #0071e3; }
+
+    .tab-body { padding: 14px; max-height: calc(100vh - 230px); overflow: auto; }
+    .toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 12px; flex-wrap: wrap; }
+    .toolbar input[type=search], .toolbar select {
+        padding: 5px 10px;
+        border: 1px solid #d2d2d7;
+        border-radius: 6px;
+        font-size: 13px;
+    }
+    .toolbar .stat { margin-left: auto; color: #6e6e73; font-size: 12px; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td { padding: 7px 10px; text-align: left; border-bottom: 1px solid #f0f0f3; vertical-align: top; }
+    th { background: #fafafa; font-weight: 600; position: sticky; top: 0; z-index: 1; }
+    tr:hover td { background: #fafafa; }
+    .chip-gen { color: #6e6e73; font-size: 12px; }
+    .mono { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 12px; color: #6e6e73; }
+    .tag {
+        display: inline-block;
+        padding: 1px 6px;
+        margin-right: 4px;
+        border-radius: 4px;
+        font-size: 11px;
+        background: #e8f4fe;
+        color: #0071e3;
+    }
+    .tag.amd { background: #fef0f0; color: #c93535; }
+    .tag.intel { background: #e8f4fe; color: #0071e3; }
+    .tag.nvidia { background: #e9f7e5; color: #3c8a2e; }
+
+    /* ---- 品牌分布条形图 ---- */
+    .brand-list { display: flex; flex-direction: column; gap: 4px; }
+    .brand-row {
+        display: grid;
+        grid-template-columns: 160px 1fr 70px;
+        gap: 10px;
+        align-items: center;
+        padding: 4px 8px;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+    .brand-row:hover { background: #f5f5f7; }
+    .brand-row.active { background: #e8f4fe; }
+    .brand-name { font-size: 13px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .brand-bar {
+        height: 14px;
+        background: #f0f0f3;
+        border-radius: 3px;
+        overflow: hidden;
+    }
+    .brand-bar-fill {
+        height: 100%;
+        background: linear-gradient(90deg, #0071e3, #5ac8fa);
+        border-radius: 3px;
+    }
+    .brand-count { text-align: right; font-size: 12px; color: #6e6e73; font-variant-numeric: tabular-nums; }
+
+    .empty, .loading { padding: 40px; text-align: center; color: #6e6e73; font-size: 14px; }
+    .err { padding: 16px; color: #c93535; background: #fef0f0; border-radius: 6px; font-size: 13px; }
+
+    .spec-list { font-size: 11px; color: #6e6e73; }
+    .spec-list span { margin-right: 8px; }
+    .spec-list b { color: #1d1d1f; font-weight: 500; }
+</style>
+</head>
+<body>
+
+<header>
+    <h1>🔧 装机字典数据视图</h1>
+    <label>周次 <select id="weekSel"></select></label>
+    <div class="kpis" id="kpis"></div>
+</header>
+
+<div class="layout">
+    <aside class="panel">
+        <div class="panel-hd">分类（点击查看详情）</div>
+        <ul class="cat-list" id="catList"><li class="loading">加载中…</li></ul>
+    </aside>
+
+    <section class="panel" id="detail">
+        <div class="panel-hd" id="detailTitle">请选择左侧分类</div>
+        <div class="tabs" id="tabs" style="display:none;">
+            <div class="tab active" data-tab="brands">品牌分布 <span class="badge" id="badgeBrands">-</span></div>
+            <div class="tab" data-tab="chips">芯片清单 <span class="badge" id="badgeChips">-</span></div>
+            <div class="tab" data-tab="skus">SKU 列表 <span class="badge" id="badgeSkus">-</span></div>
+            <div class="tab" data-tab="filtered">被过滤 <span class="badge" id="badgeFiltered">-</span></div>
+        </div>
+        <div class="tab-body" id="tabBody"><div class="empty">选择左侧分类开始浏览</div></div>
+    </section>
+</div>
+
+<script>
+'use strict';
+
+const $ = (s, p = document) => p.querySelector(s);
+const $$ = (s, p = document) => [...p.querySelectorAll(s)];
+
+const STATE = {
+    week: null,
+    summary: null,
+    category: null,     // 当前选中的分类 key
+    tab: 'brands',
+    brands: null,       // 缓存: brands[category]
+    chips: null,        // 缓存: chips[category]
+    unfiltered: null,   // 缓存: 整周的 _unfiltered.csv
+    skuCache: {},       // key: `${cat}:${brand}` -> 数组
+    skuFilter: { brand: null, q: '' },
+    chipFilter: '',
+    unfilteredFilter: '',
+};
+
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = (n) => (n ?? 0).toLocaleString('zh-CN');
+
+async function api(path, params = {}) {
+    const qs = new URLSearchParams(params).toString();
+    const resp = await fetch(path + (qs ? '?' + qs : ''));
+    const data = await resp.json();
+    if (!resp.ok) throw new Error(data.error || resp.statusText);
+    return data;
+}
+
+// ---------------------- 初始 ----------------------
+init();
+
+async function init() {
+    try {
+        const { weeks, latest } = await api('/api/weeks');
+        if (!weeks.length) {
+            $('#detailTitle').innerHTML = '<span style="color:#c93535">data/dict/ 下无任何周次快照</span>';
+            $('#catList').innerHTML = '';
+            return;
+        }
+        const sel = $('#weekSel');
+        sel.innerHTML = weeks.map(w => `<option value="${esc(w)}">${esc(w)}</option>`).join('');
+        sel.value = latest;
+        sel.addEventListener('change', () => loadWeek(sel.value));
+        await loadWeek(latest);
+    } catch (err) {
+        $('#catList').innerHTML = `<li class="err">初始化失败：${esc(err.message)}</li>`;
+    }
+}
+
+async function loadWeek(week) {
+    STATE.week = week;
+    STATE.category = null;
+    STATE.brands = {};
+    STATE.chips = {};
+    STATE.skuCache = {};
+    STATE.unfiltered = null;
+    $('#catList').innerHTML = '<li class="loading">加载汇总中…</li>';
+    try {
+        STATE.summary = await api('/api/summary', { week });
+        renderHeader();
+        renderCatList();
+        $('#detailTitle').textContent = '请选择左侧分类';
+        $('#tabs').style.display = 'none';
+        $('#tabBody').innerHTML = '<div class="empty">选择左侧分类开始浏览</div>';
+    } catch (err) {
+        $('#catList').innerHTML = `<li class="err">加载失败：${esc(err.message)}</li>`;
+    }
+}
+
+function renderHeader() {
+    const s = STATE.summary;
+    $('#kpis').innerHTML = [
+        ['分类', s.total_categories],
+        ['芯片', s.total_chips],
+        ['品牌', s.total_brands],
+        ['SKU', s.total_skus],
+    ].map(([k, v]) => `<span class="kpi"><b>${fmt(v)}</b>${k}</span>`).join('');
+}
+
+function renderCatList() {
+    const cats = STATE.summary.categories;
+    const maxSku = Math.max(1, ...cats.map(c => c.skus));
+    $('#catList').innerHTML = cats.map(c => `
+        <li class="cat-item" data-key="${esc(c.key)}">
+            <div class="cat-name"><span>${esc(c.label)}</span><span class="sku-count">${fmt(c.skus)}</span></div>
+            <div class="cat-nums">
+                <span>芯片 ${fmt(c.chips)}</span>
+                <span>品牌 ${fmt(c.brands)}</span>
+                ${c.dropped ? `<span>已过滤 ${fmt(c.dropped)}</span>` : ''}
+            </div>
+            <div class="bar"><div class="bar-fill" style="width:${(c.skus / maxSku * 100).toFixed(1)}%"></div></div>
+        </li>
+    `).join('');
+    $$('#catList .cat-item').forEach(el => el.addEventListener('click', () => selectCategory(el.dataset.key)));
+}
+
+async function selectCategory(key) {
+    STATE.category = key;
+    STATE.skuFilter = { brand: null, q: '' };
+    STATE.chipFilter = '';
+    $$('#catList .cat-item').forEach(el => el.classList.toggle('active', el.dataset.key === key));
+    const cat = STATE.summary.categories.find(c => c.key === key);
+    $('#detailTitle').innerHTML = `
+        ${esc(cat.label)}
+        <span style="font-weight:400;color:#6e6e73;font-size:12px;margin-left:8px;">
+            ${fmt(cat.chips)} 芯片 · ${fmt(cat.brands)} 品牌 · ${fmt(cat.skus)} SKU${cat.dropped ? ` · ${fmt(cat.dropped)} 已过滤` : ''}
+        </span>`;
+    $('#tabs').style.display = 'flex';
+    $('#badgeChips').textContent = fmt(cat.chips);
+    $('#badgeBrands').textContent = fmt(cat.brands);
+    $('#badgeSkus').textContent = fmt(cat.skus);
+    $('#badgeFiltered').textContent = fmt(cat.dropped);
+    switchTab('brands');
+}
+
+// ---------------------- Tabs ----------------------
+$$('#tabs .tab').forEach(el => el.addEventListener('click', () => switchTab(el.dataset.tab)));
+
+function switchTab(tab) {
+    STATE.tab = tab;
+    $$('#tabs .tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
+    if (!STATE.category) return;
+    if (tab === 'brands') renderBrands();
+    else if (tab === 'chips') renderChips();
+    else if (tab === 'skus') renderSkus();
+    else if (tab === 'filtered') renderFiltered();
+}
+
+// ---------------------- 品牌分布 ----------------------
+async function renderBrands() {
+    const body = $('#tabBody');
+    body.innerHTML = '<div class="loading">加载品牌列表…</div>';
+    try {
+        const brands = await getBrands(STATE.category);
+        if (!brands.length) {
+            body.innerHTML = '<div class="empty">该分类暂无品牌 SKU 数据</div>';
+            return;
+        }
+        const maxN = Math.max(1, ...brands.map(b => b.count));
+        body.innerHTML = `
+            <div class="toolbar">
+                <span style="font-size:12px;color:#6e6e73;">点击条目可跳到该品牌的 SKU 列表</span>
+                <span class="stat">共 ${fmt(brands.length)} 个品牌 · 合计 ${fmt(brands.reduce((s, b) => s + b.count, 0))} SKU</span>
+            </div>
+            <div class="brand-list">
+                ${brands.map(b => `
+                    <div class="brand-row" data-brand="${esc(b.brand)}">
+                        <div class="brand-name" title="${esc(b.brand)}">${esc(b.brand)}</div>
+                        <div class="brand-bar"><div class="brand-bar-fill" style="width:${(b.count / maxN * 100).toFixed(1)}%"></div></div>
+                        <div class="brand-count">${fmt(b.count)}</div>
+                    </div>
+                `).join('')}
+            </div>`;
+        $$('.brand-row', body).forEach(el => el.addEventListener('click', () => {
+            STATE.skuFilter = { brand: el.dataset.brand, q: '' };
+            switchTab('skus');
+        }));
+    } catch (err) {
+        body.innerHTML = `<div class="err">加载品牌失败：${esc(err.message)}</div>`;
+    }
+}
+
+async function getBrands(cat) {
+    if (STATE.brands[cat]) return STATE.brands[cat];
+    const { brands } = await api('/api/brands', { week: STATE.week, category: cat });
+    STATE.brands[cat] = brands;
+    return brands;
+}
+
+// ---------------------- 芯片清单 ----------------------
+async function renderChips() {
+    const body = $('#tabBody');
+    body.innerHTML = '<div class="loading">加载芯片清单…</div>';
+    try {
+        const chips = await getChips(STATE.category);
+        const q = STATE.chipFilter.toLowerCase();
+        const filtered = q
+            ? chips.filter(c => (c.chip || '').toLowerCase().includes(q) || (c.generation || '').toLowerCase().includes(q))
+            : chips;
+        const byGen = {};
+        for (const c of chips) {
+            const g = c.generation || '(未分代)';
+            byGen[g] = (byGen[g] || 0) + 1;
+        }
+        const genSummary = Object.entries(byGen).sort((a, b) => b[1] - a[1])
+            .slice(0, 8)
+            .map(([g, n]) => `<span class="tag">${esc(g)} × ${n}</span>`).join('');
+
+        body.innerHTML = `
+            <div class="toolbar">
+                <input type="search" id="chipQ" placeholder="搜索芯片名或代际…" value="${esc(STATE.chipFilter)}" style="width:260px;">
+                <span class="stat">显示 ${fmt(filtered.length)} / ${fmt(chips.length)}</span>
+            </div>
+            <div style="margin-bottom:10px;">${genSummary}</div>
+            <table>
+                <thead><tr>
+                    <th style="width:44px;">#</th>
+                    <th>芯片</th>
+                    <th style="width:240px;">代际</th>
+                    <th style="width:110px;">厂商</th>
+                    <th style="width:100px;">来源</th>
+                </tr></thead>
+                <tbody>
+                    ${filtered.slice(0, 2000).map((c, i) => `
+                        <tr>
+                            <td class="mono">${i + 1}</td>
+                            <td>${esc(c.chip)}</td>
+                            <td class="chip-gen">${esc(c.generation || '')}</td>
+                            <td><span class="tag ${esc((c.vendor || '').toLowerCase())}">${esc(c.vendor || '-')}</span></td>
+                            <td class="mono">${esc(c.source || '')}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+            ${filtered.length > 2000 ? `<div class="empty">已截断至前 2000 条，使用搜索收敛</div>` : ''}`;
+        $('#chipQ').addEventListener('input', (e) => {
+            STATE.chipFilter = e.target.value;
+            renderChips();
+        });
+    } catch (err) {
+        body.innerHTML = `<div class="err">加载芯片失败：${esc(err.message)}</div>`;
+    }
+}
+
+async function getChips(cat) {
+    if (STATE.chips[cat]) return STATE.chips[cat];
+    const { chips } = await api('/api/chips', { week: STATE.week, category: cat });
+    STATE.chips[cat] = chips;
+    return chips;
+}
+
+// ---------------------- SKU 列表 ----------------------
+async function renderSkus() {
+    const body = $('#tabBody');
+    const brands = await getBrands(STATE.category).catch(() => []);
+    if (!brands.length) {
+        body.innerHTML = '<div class="empty">该分类暂无品牌 SKU 数据</div>';
+        return;
+    }
+    const curBrand = STATE.skuFilter.brand || brands[0].brand;
+    STATE.skuFilter.brand = curBrand;
+
+    body.innerHTML = `
+        <div class="toolbar">
+            <label>品牌 <select id="brandSel">${brands.map(b =>
+                `<option value="${esc(b.brand)}" ${b.brand === curBrand ? 'selected' : ''}>${esc(b.brand)} (${fmt(b.count)})</option>`
+            ).join('')}</select></label>
+            <input type="search" id="skuQ" placeholder="搜索标题 / 芯片…" value="${esc(STATE.skuFilter.q)}" style="width:240px;">
+            <span class="stat" id="skuStat">加载中…</span>
+        </div>
+        <div id="skuArea"><div class="loading">加载 SKU…</div></div>`;
+
+    $('#brandSel').addEventListener('change', (e) => {
+        STATE.skuFilter.brand = e.target.value;
+        renderSkus();
+    });
+    $('#skuQ').addEventListener('input', (e) => {
+        STATE.skuFilter.q = e.target.value;
+        renderSkuTable();
+    });
+
+    try {
+        await getSkus(STATE.category, curBrand);
+        renderSkuTable();
+    } catch (err) {
+        $('#skuArea').innerHTML = `<div class="err">加载 SKU 失败：${esc(err.message)}</div>`;
+    }
+}
+
+async function getSkus(cat, brand) {
+    const key = `${cat}:${brand}`;
+    if (STATE.skuCache[key]) return STATE.skuCache[key];
+    const { skus } = await api('/api/skus', { week: STATE.week, category: cat, brand });
+    STATE.skuCache[key] = skus;
+    return skus;
+}
+
+function renderSkuTable() {
+    const { brand, q } = STATE.skuFilter;
+    const all = STATE.skuCache[`${STATE.category}:${brand}`] || [];
+    const qLower = q.toLowerCase();
+    const rows = qLower
+        ? all.filter(s => (s.sku_title || '').toLowerCase().includes(qLower) || (s.chip || '').toLowerCase().includes(qLower))
+        : all;
+    $('#skuStat').textContent = `${brand}：${fmt(rows.length)} / ${fmt(all.length)}`;
+    if (!rows.length) {
+        $('#skuArea').innerHTML = '<div class="empty">无匹配 SKU</div>';
+        return;
+    }
+    $('#skuArea').innerHTML = `
+        <table>
+            <thead><tr>
+                <th style="width:44px;">#</th>
+                <th>标题</th>
+                <th style="width:220px;">芯片</th>
+                <th>规格摘要</th>
+                <th style="width:60px;">合并</th>
+            </tr></thead>
+            <tbody>
+                ${rows.slice(0, 1500).map((s, i) => `
+                    <tr>
+                        <td class="mono">${i + 1}</td>
+                        <td>${esc(s.sku_title)}${s.alt_titles && s.alt_titles.length ? `<div class="mono" style="margin-top:2px;">别名：${s.alt_titles.slice(0, 3).map(esc).join(' · ')}${s.alt_titles.length > 3 ? ` +${s.alt_titles.length - 3}` : ''}</div>` : ''}</td>
+                        <td>${esc(s.chip || '-')}</td>
+                        <td class="spec-list">${specSummary(s.spec)}</td>
+                        <td class="mono">${s.origin_count != null ? '×' + s.origin_count : '-'}</td>
+                    </tr>
+                `).join('')}
+            </tbody>
+        </table>
+        ${rows.length > 1500 ? `<div class="empty">已截断至前 1500 条，使用搜索收敛</div>` : ''}`;
+}
+
+function specSummary(spec) {
+    if (!spec || typeof spec !== 'object') return '';
+    const parts = [];
+    const order = ['memory', 'capacity', 'speed', 'clock', 'core_clock', 'boost_clock', 'tdp', 'watt', 'wattage',
+                   'socket', 'chipset', 'form_factor', 'color', 'length', 'height'];
+    const seen = new Set();
+    for (const k of order) {
+        if (k in spec && spec[k] != null && spec[k] !== '') {
+            parts.push(`<span><b>${esc(k)}</b>: ${esc(spec[k])}</span>`);
+            seen.add(k);
+        }
+    }
+    for (const [k, v] of Object.entries(spec)) {
+        if (seen.has(k) || v == null || v === '' || k === 'chipset') continue;
+        parts.push(`<span><b>${esc(k)}</b>: ${esc(v)}</span>`);
+        if (parts.length >= 6) break;
+    }
+    return parts.join(' ');
+}
+
+// ---------------------- 被过滤 ----------------------
+async function renderFiltered() {
+    const body = $('#tabBody');
+    body.innerHTML = '<div class="loading">加载被过滤记录…</div>';
+    try {
+        if (!STATE.unfiltered) {
+            const { rows } = await api('/api/unfiltered', { week: STATE.week, limit: 5000 });
+            STATE.unfiltered = rows;
+        }
+        const all = STATE.unfiltered.filter(r => r.category === STATE.category);
+        const q = STATE.unfilteredFilter.toLowerCase();
+        const rows = q
+            ? all.filter(r => (r.name || '').toLowerCase().includes(q) || (r.reason || '').toLowerCase().includes(q))
+            : all;
+        const byReason = {};
+        for (const r of all) {
+            const rk = (r.reason || '').split(':')[0] || '(空)';
+            byReason[rk] = (byReason[rk] || 0) + 1;
+        }
+        const reasonTags = Object.entries(byReason).sort((a, b) => b[1] - a[1])
+            .map(([k, n]) => `<span class="tag">${esc(k)} × ${n}</span>`).join('');
+
+        body.innerHTML = `
+            <div class="toolbar">
+                <input type="search" id="filteredQ" placeholder="搜索名称 / 原因…" value="${esc(STATE.unfilteredFilter)}" style="width:240px;">
+                <span class="stat">显示 ${fmt(rows.length)} / ${fmt(all.length)}${STATE.unfiltered.length >= 5000 ? '（已截断至 5000）' : ''}</span>
+            </div>
+            <div style="margin-bottom:10px;">${reasonTags || '<span class="mono">无</span>'}</div>
+            ${rows.length ? `
+                <table>
+                    <thead><tr>
+                        <th style="width:44px;">#</th>
+                        <th>名称</th>
+                        <th style="width:90px;">状态</th>
+                        <th>原因</th>
+                    </tr></thead>
+                    <tbody>
+                        ${rows.slice(0, 1500).map((r, i) => `
+                            <tr>
+                                <td class="mono">${i + 1}</td>
+                                <td>${esc(r.name)}</td>
+                                <td><span class="tag">${esc(r.status)}</span></td>
+                                <td class="mono">${esc(r.reason)}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+                ${rows.length > 1500 ? `<div class="empty">已截断至前 1500 条</div>` : ''}
+            ` : '<div class="empty">该分类无被过滤记录</div>'}`;
+        $('#filteredQ')?.addEventListener('input', (e) => {
+            STATE.unfilteredFilter = e.target.value;
+            renderFiltered();
+        });
+    } catch (err) {
+        body.innerHTML = `<div class="err">加载失败：${esc(err.message)}</div>`;
+    }
+}
+</script>
+</body>
+</html>

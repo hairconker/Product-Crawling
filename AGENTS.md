@@ -1,6 +1,6 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+This file provides guidance to Codex (Codex.ai/code) when working with code in this repository.
 
 ## 项目定位
 
@@ -101,7 +101,7 @@ python -m py_compile run_cpu_crawl_pw.py run_cpu_crawl.py run_jd_drission.py scr
 
 ## 项目级 Skill / Command 系统（重要）
 
-`.claude/skills/` 和 `.claude/commands/` 是这个项目的**强约束**（不是可选参考）：
+`.Codex/skills/` 和 `.Codex/commands/` 是这个项目的**强约束**（不是可选参考）：
 
 | 命令 | 何时自动加载 | 强制内容 |
 |---|---|---|

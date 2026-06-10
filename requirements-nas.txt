@@ -1,0 +1,3 @@
+# NAS 运行闲鱼/淘宝 Playwright 主脚本所需的最小依赖。
+# 完整未来版依赖仍见 requirements.txt。
+playwright>=1.44.0

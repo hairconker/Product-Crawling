@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Codex 会话恢复控制台</title>
+<style>
+    * { box-sizing: border-box; }
+    body {
+        margin: 0;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Microsoft YaHei", sans-serif;
+        background: #f7f8fa;
+        color: #17181a;
+    }
+    header {
+        padding: 18px 24px;
+        border-bottom: 1px solid #dfe3ea;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+    }
+    h1 { font-size: 20px; margin: 0; font-weight: 650; }
+    main { padding: 20px 24px 32px; max-width: 1320px; margin: 0 auto; }
+    button {
+        border: 1px solid #cfd6df;
+        background: #ffffff;
+        color: #17181a;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 13px;
+        cursor: pointer;
+        min-height: 36px;
+    }
+    button:hover { background: #f0f3f7; }
+    button.primary { background: #1167d8; border-color: #1167d8; color: #ffffff; }
+    button.primary:hover { background: #0d58ba; }
+    button.warn { background: #fff7ed; border-color: #f0b16c; color: #8a4700; }
+    button.danger { background: #fff1f1; border-color: #ef9a9a; color: #9f1d1d; }
+    button:disabled { opacity: .55; cursor: progress; }
+    input, select {
+        border: 1px solid #cfd6df;
+        border-radius: 6px;
+        padding: 8px 10px;
+        font-size: 13px;
+        background: #ffffff;
+        min-height: 36px;
+    }
+    .grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 12px;
+        margin-bottom: 16px;
+    }
+    .metric {
+        background: #ffffff;
+        border: 1px solid #e1e5eb;
+        border-radius: 8px;
+        padding: 14px;
+    }
+    .metric .label { color: #626b78; font-size: 12px; }
+    .metric .value { font-size: 26px; font-weight: 700; margin-top: 6px; }
+    .layout {
+        display: grid;
+        grid-template-columns: 1fr 390px;
+        gap: 16px;
+        align-items: start;
+    }
+    section {
+        background: #ffffff;
+        border: 1px solid #e1e5eb;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        overflow: hidden;
+    }
+    section h2 {
+        margin: 0;
+        padding: 13px 14px;
+        font-size: 15px;
+        border-bottom: 1px solid #e1e5eb;
+        background: #fbfcfe;
+    }
+    .section-body { padding: 14px; }
+    .actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+    .select-cell { width: 42px; text-align: center; }
+    .stack { display: grid; gap: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th, td {
+        padding: 9px 10px;
+        border-bottom: 1px solid #edf0f4;
+        text-align: left;
+        vertical-align: top;
+    }
+    th { color: #4f5966; font-weight: 650; background: #fbfcfe; position: sticky; top: 0; }
+    tr:hover td { background: #fafbfc; }
+    .path { font-family: Consolas, "SFMono-Regular", monospace; font-size: 12px; word-break: break-all; }
+    .pill {
+        display: inline-flex;
+        align-items: center;
+        border-radius: 999px;
+        padding: 2px 8px;
+        font-size: 12px;
+        border: 1px solid #d5dbe3;
+        color: #4f5966;
+        background: #f8fafc;
+        white-space: nowrap;
+    }
+    .pill.ok { color: #0f6b3a; background: #ecfdf3; border-color: #b9e7cc; }
+    .pill.warn { color: #8a4700; background: #fff7ed; border-color: #f0d0a6; }
+    .pill.bad { color: #9f1d1d; background: #fff1f1; border-color: #efc0c0; }
+    .muted { color: #626b78; font-size: 12px; }
+    .notice {
+        padding: 12px 14px;
+        border: 1px solid #f0d0a6;
+        background: #fff7ed;
+        color: #7a3e00;
+        border-radius: 8px;
+        margin-bottom: 16px;
+        display: none;
+    }
+    pre {
+        margin: 0;
+        padding: 12px;
+        overflow: auto;
+        max-height: 420px;
+        background: #111827;
+        color: #e5e7eb;
+        border-radius: 6px;
+        font-size: 12px;
+        line-height: 1.45;
+        white-space: pre-wrap;
+    }
+    .log-list { display: grid; gap: 10px; }
+    .log-item { border: 1px solid #e1e5eb; border-radius: 8px; overflow: hidden; }
+    .log-head {
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        padding: 9px 10px;
+        background: #fbfcfe;
+        border-bottom: 1px solid #e1e5eb;
+        font-size: 12px;
+    }
+    .two { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    @media (max-width: 980px) {
+        .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+        .layout { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 620px) {
+        header { align-items: flex-start; flex-direction: column; }
+        main { padding: 14px; }
+        .grid { grid-template-columns: 1fr; }
+        .two { grid-template-columns: 1fr; }
+    }
+</style>
+</head>
+<body>
+<header>
+    <div>
+        <h1>Codex 会话恢复控制台</h1>
+        <div class="muted">本地服务只监听 127.0.0.1，按钮调用白名单恢复脚本。</div>
+    </div>
+    <div class="actions">
+        <button class="primary" id="scanBtn">重新识别</button>
+    </div>
+</header>
+
+<main>
+    <div class="grid">
+        <div class="metric">
+            <div class="label">openai 原记录</div>
+            <div class="value" id="openaiCount">-</div>
+        </div>
+        <div class="metric">
+            <div class="label">custom/API 记录</div>
+            <div class="value" id="customCount">-</div>
+        </div>
+        <div class="metric">
+            <div class="label">副本待修复</div>
+            <div class="value" id="repairCount">-</div>
+        </div>
+        <div class="metric">
+            <div class="label">待创建副本</div>
+            <div class="value" id="apiCopyCount">-</div>
+        </div>
+    </div>
+    <div class="notice" id="notice"></div>
+
+    <div class="layout">
+        <div>
+            <section>
+                <h2>识别到的项目</h2>
+                <div class="section-body">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th class="select-cell"><input type="checkbox" id="selectAllProjects" aria-label="全选项目"></th>
+                                <th>项目名称</th>
+                                <th>对应关系</th>
+                                <th>项目</th>
+                                <th>custom</th>
+                                <th>openai</th>
+                                <th>普通路径</th>
+                                <th>扩展路径</th>
+                                <th>可见聊天</th>
+                            </tr>
+                        </thead>
+                        <tbody id="projectRows">
+                            <tr><td colspan="9" class="muted">等待识别</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <section>
+                <h2>导出会话</h2>
+                <div class="section-body stack">
+                    <div class="two">
+                        <input id="exportOutput" value="codex-session-export-web" aria-label="导出目录名">
+                        <select id="projectFilter" aria-label="选择项目">
+                            <option value="">选择一个项目导出</option>
+                        </select>
+                    </div>
+                    <div class="actions">
+                        <button id="exportAllBtn">导出全部 Markdown + Raw</button>
+                        <button id="exportProjectBtn">导出选中项目</button>
+                        <button id="listProjectsBtn">重新列出可导出项目</button>
+                    </div>
+                    <div class="muted">导出目录会写在仓库根目录下；导出的 raw JSONL 可能包含路径、命令输出或敏感信息。</div>
+                </div>
+            </section>
+        </div>
+
+        <aside>
+            <section>
+                <h2>脚本操作</h2>
+                <div class="section-body stack">
+                    <div class="muted" id="selectedInfo">已选 0 个项目</div>
+                    <div class="actions">
+                        <button id="selectVisibleBtn">选择左侧项目</button>
+                        <button id="clearSelectedBtn">清空选择</button>
+                        <button class="primary" id="backupOnlyBtn">备份当前状态</button>
+                    </div>
+                    <div class="actions">
+                        <button id="repairDryBtn">预检副本修复</button>
+                        <button class="warn" id="repairApplyBtn">应用副本修复</button>
+                    </div>
+                    <div class="actions">
+                        <button id="repairSelectedDryBtn">预检选中项目修复</button>
+                        <button class="warn" id="repairSelectedApplyBtn">应用选中项目修复</button>
+                    </div>
+                    <div class="actions">
+                        <button id="apiCopyDryBtn">预检创建 API 副本</button>
+                        <button class="warn" id="apiCopyApplyBtn">创建 API 副本</button>
+                    </div>
+                    <div class="actions">
+                        <button id="normalizeDryBtn">预检路径归一</button>
+                        <button class="danger" id="normalizeApplyBtn">应用路径归一</button>
+                    </div>
+                    <div class="muted">带“应用”的按钮会触发脚本备份后写入 Codex 当前状态。先看预检输出再应用。</div>
+                </div>
+            </section>
+
+            <section>
+                <h2>最近输出</h2>
+                <div class="section-body">
+                    <div class="log-list" id="logs">
+                        <div class="muted">暂无输出</div>
+                    </div>
+                </div>
+            </section>
+        </aside>
+    </div>
+</main>
+
+<script>
+'use strict';
+
+const state = { scan: null, busy: false };
+const $ = (selector) => document.querySelector(selector);
+const logs = $('#logs');
+
+function setBusy(value) {
+    state.busy = value;
+    document.querySelectorAll('button').forEach((button) => {
+        button.disabled = value;
+    });
+}
+
+async function requestJson(url, options = {}) {
+    const response = await fetch(url, {
+        headers: { 'Content-Type': 'application/json' },
+        ...options,
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.error || `HTTP ${response.status}`);
+    }
+    return data;
+}
+
+async function scan() {
+    setBusy(true);
+    try {
+        const data = await requestJson('/api/scan');
+        state.scan = data;
+        renderScan(data);
+        addLog('scan', data.report);
+        addLog('repair dry-run', data.repair);
+        addLog('api-copy dry-run', data.apiCopy);
+        addLog('normalize dry-run', data.normalize);
+    } catch (error) {
+        addError('scan failed', error);
+    } finally {
+        setBusy(false);
+    }
+}
+
+async function action(name, payload) {
+    setBusy(true);
+    try {
+        const data = await requestJson('/api/action', {
+            method: 'POST',
+            body: JSON.stringify(payload),
+        });
+        if (data.result) {
+            addLog(name, data.result);
+        } else {
+            state.scan = data;
+            renderScan(data);
+            addLog(name, data.report || { stdout: JSON.stringify(data, null, 2), returncode: 0, ok: true });
+        }
+        if (!['report', 'exportList', 'backupOnly'].includes(payload.action)) {
+            await scan();
+        }
+    } catch (error) {
+        addError(name, error);
+    } finally {
+        setBusy(false);
+    }
+}
+
+function renderScan(data) {
+    const providers = data.parsed.providers || {};
+    const summary = data.parsed.summary || {};
+    $('#openaiCount').textContent = providers.openai ?? 0;
+    $('#customCount').textContent = providers.custom ?? 0;
+    $('#repairCount').textContent = data.parsed.repair ?? '-';
+    $('#apiCopyCount').textContent = data.parsed.apiCopy ?? '-';
+    renderNotice(data, summary);
+
+    const rows = data.parsed.projects || [];
+    $('#projectRows').innerHTML = rows.length ? rows.map((row) => `
+        <tr>
+            <td class="select-cell"><input type="checkbox" class="project-check" value="${escapeAttr(row.project)}" data-origin="${escapeAttr(row.origin || '')}" aria-label="选择 ${escapeAttr(row.displayName || projectName(row.project))}"></td>
+            <td>${escapeHtml(row.displayName || projectName(row.project))}</td>
+            <td>${originPill(row.origin)}</td>
+            <td class="path">${escapeHtml(row.project)}</td>
+            <td>${row.custom}</td>
+            <td>${row.openai}</td>
+            <td><span class="pill ok">${row.plain}</span></td>
+            <td>${statusPill(row.extended)}</td>
+            <td>${row.userLikeCustom}</td>
+        </tr>
+    `).join('') : '<tr><td colspan="9" class="muted">没有识别到项目</td></tr>';
+    document.querySelectorAll('.project-check').forEach((checkbox) => {
+        checkbox.addEventListener('change', updateSelectedInfo);
+    });
+    const selectAll = $('#selectAllProjects');
+    if (selectAll) {
+        selectAll.checked = false;
+        selectAll.addEventListener('change', () => {
+            document.querySelectorAll('.project-check').forEach((checkbox) => {
+                checkbox.checked = selectAll.checked;
+            });
+            updateSelectedInfo();
+        });
+    }
+    updateSelectedInfo();
+
+    const select = $('#projectFilter');
+    const options = (data.parsed.projectList || []).map((item) =>
+        `<option value="${escapeAttr(item.project)}">${escapeHtml(item.project)} (${item.count})</option>`
+    ).join('');
+    select.innerHTML = `<option value="">选择一个项目导出</option>${options}`;
+}
+
+function renderNotice(data, summary) {
+    const repair = data.parsed.repair || 0;
+    const extended = summary.customExtendedCwdRows || 0;
+    const marked = summary.markedApiVisibleCopies || 0;
+    const openai = (data.parsed.providers || {}).openai || 0;
+    const notice = $('#notice');
+    if (repair > 0 || extended > 0 || marked < openai) {
+        notice.style.display = 'block';
+        notice.textContent = `当前仍有 ${repair} 个 API 副本待修复，${extended} 条 custom 扩展路径，${marked}/${openai} 个副本带来源标记。如果刚应用过又变回这个状态，说明 Codex 桌面端还在运行并把内存旧状态写回了数据库；请完全退出 Codex 后再运行应用按钮或命令行脚本。`;
+    } else {
+        notice.style.display = 'none';
+        notice.textContent = '';
+    }
+}
+
+function statusPill(value) {
+    if (!value) {
+        return '<span class="pill ok">0</span>';
+    }
+    return `<span class="pill warn">${value}</span>`;
+}
+
+function originPill(origin) {
+    if (origin === 'configured') {
+        return '<span class="pill ok">软件左侧项目</span>';
+    }
+    return '<span class="pill warn">仅数据库识别</span>';
+}
+
+function selectedProjects() {
+    return [...document.querySelectorAll('.project-check:checked')].map((item) => item.value);
+}
+
+function updateSelectedInfo() {
+    $('#selectedInfo').textContent = `已选 ${selectedProjects().length} 个项目`;
+}
+
+function selectByOrigin(origin) {
+    document.querySelectorAll('.project-check').forEach((checkbox) => {
+        checkbox.checked = checkbox.dataset.origin === origin;
+    });
+    const selectAll = $('#selectAllProjects');
+    if (selectAll) selectAll.checked = false;
+    updateSelectedInfo();
+}
+
+function projectName(path) {
+    const cleaned = String(path || '').replace(/^\\\\\?\\/, '').replace(/[\\/]+$/, '');
+    const parts = cleaned.split(/[\\/]+/).filter(Boolean);
+    if (!parts.length) {
+        return cleaned || '-';
+    }
+    return parts[parts.length - 1];
+}
+
+function addLog(title, result) {
+    if (!result) return;
+    if (logs.querySelector('.muted')) {
+        logs.innerHTML = '';
+    }
+    const item = document.createElement('div');
+    item.className = 'log-item';
+    const status = result.ok ? '<span class="pill ok">OK</span>' : '<span class="pill bad">FAIL</span>';
+    const body = [result.command, result.stdout, result.stderr].filter(Boolean).join('\n\n');
+    item.innerHTML = `
+        <div class="log-head">
+            <strong>${escapeHtml(title)}</strong>
+            <span>${status}</span>
+        </div>
+        <pre>${escapeHtml(body || '(no output)')}</pre>
+    `;
+    logs.prepend(item);
+}
+
+function addError(title, error) {
+    addLog(title, {
+        ok: false,
+        returncode: 1,
+        command: '',
+        stdout: '',
+        stderr: error instanceof Error ? error.message : String(error),
+    });
+}
+
+function escapeHtml(value) {
+    return String(value)
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+}
+
+function escapeAttr(value) {
+    return escapeHtml(value).replaceAll('`', '&#096;');
+}
+
+$('#scanBtn').addEventListener('click', scan);
+$('#repairDryBtn').addEventListener('click', () => action('repair dry-run', { action: 'repairDry' }));
+$('#repairApplyBtn').addEventListener('click', () => action('repair apply', { action: 'repairApply' }));
+$('#repairSelectedDryBtn').addEventListener('click', () => action('repair selected dry-run', {
+    action: 'repairDry',
+    projects: selectedProjects(),
+}));
+$('#repairSelectedApplyBtn').addEventListener('click', () => action('repair selected apply', {
+    action: 'repairApply',
+    projects: selectedProjects(),
+}));
+$('#backupOnlyBtn').addEventListener('click', () => action('backup current state', { action: 'backupOnly' }));
+$('#selectVisibleBtn').addEventListener('click', () => selectByOrigin('configured'));
+$('#clearSelectedBtn').addEventListener('click', () => {
+    document.querySelectorAll('.project-check').forEach((checkbox) => {
+        checkbox.checked = false;
+    });
+    const selectAll = $('#selectAllProjects');
+    if (selectAll) selectAll.checked = false;
+    updateSelectedInfo();
+});
+$('#apiCopyDryBtn').addEventListener('click', () => action('api copy dry-run', { action: 'apiCopyDry' }));
+$('#apiCopyApplyBtn').addEventListener('click', () => action('api copy apply', { action: 'apiCopyApply' }));
+$('#normalizeDryBtn').addEventListener('click', () => action('normalize dry-run', { action: 'normalizeDry' }));
+$('#normalizeApplyBtn').addEventListener('click', () => action('normalize apply', { action: 'normalizeApply' }));
+$('#listProjectsBtn').addEventListener('click', () => action('list projects', { action: 'exportList' }));
+$('#exportAllBtn').addEventListener('click', () => action('export all', {
+    action: 'exportAll',
+    output: $('#exportOutput').value,
+}));
+$('#exportProjectBtn').addEventListener('click', () => action('export project', {
+    action: 'exportProject',
+    output: $('#exportOutput').value,
+    projectFilter: $('#projectFilter').value,
+}));
+
+scan();
+</script>
+</body>
+</html>
